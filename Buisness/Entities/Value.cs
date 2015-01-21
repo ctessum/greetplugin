@@ -8,7 +8,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
     /// <summary>
     /// A value and it's unit
     /// </summary>
-    struct Value
+    public struct Value
     {
         double _value;
         string _unit;

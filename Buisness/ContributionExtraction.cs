@@ -28,9 +28,19 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// Saves the extracted values to a file
         /// </summary>
         /// <param name="dictionary"></param>
-        public static void SaveToFile(Dictionary<Guid, Item> dictionary)
-        { 
-        
+        public static void SaveToFile(System.IO.StreamWriter fid, Dictionary<Guid, float[]> data)
+        {
+            // Use var keyword to enumerate dictionary.
+            foreach (var pair in data)
+            {
+                string line = pair.Key.ToString();
+                foreach (float val in pair.Value)
+                {
+                    line+=val.ToString("G");
+                }
+                fid.WriteLine(line);
+            }
+            fid.Close();
         }
 
     }

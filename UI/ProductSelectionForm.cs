@@ -6,6 +6,7 @@ using Greet.DataStructureV3.Interfaces;
 using Greet.DataStructureV3.Entities;
 using Greet.DataStructureV3.ResultsStorage;
 using Greet.DataStructureV3;
+using Greet.Plugins.SplitContributions.Buisness;
 
 namespace SplitContributions.UI
 {
@@ -192,6 +193,27 @@ namespace SplitContributions.UI
 
 
             }
+            buttonSave.Visible = true;
+        }
+
+        private void buttonSave_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog filedata = new SaveFileDialog();
+            filedata.FileName = "greet_process.csv";
+            filedata.Filter = "txt files (*.csv)|*.csv|All files (*.*)|*.*";
+            filedata.ShowDialog();
+            System.IO.StreamWriter fid = new System.IO.StreamWriter(filedata.FileName);
+
+            // Sample data ////////////////////////////////////
+            float[] vals = { 1, 2, 3, 4, 5, 6, 1, 2, 3 };
+            Dictionary<Guid, float[]> data = new Dictionary<Guid, float[]>();
+            data.Add(Guid.NewGuid(), vals);
+            data.Add(Guid.NewGuid(), vals);
+            data.Add(Guid.NewGuid(), vals);
+            data.Add(Guid.NewGuid(), vals);
+            ///////////////////////////////////////////////////
+
+            Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, data);
         }
     }
 }
