@@ -19,14 +19,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="type"></param>
         /// <param name="gasOrResourceID"></param>
         /// <returns></returns>
-        public static Dictionary<Guid, float[]> ExtractContributions(Graph graph, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
+        public static Dictionary<string, float[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
         {
 
             // Sample data ////////////////////////////////////
             
-            Dictionary<Guid, float[]> data = new Dictionary<Guid, float[]>();
+            Dictionary<string, float[]> data = new Dictionary<string, float[]>();
             Random random = new Random();
-            for (int i = 0; i < 10; i++ )
+            int i = 0;
+            foreach (Process p in g.Processes)
             {
                 float[] vals = new float[gasOrResourceIDs.Length];
                 for (int j = 0; j<gasOrResourceIDs.Length; j++)
@@ -34,7 +35,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
                     double v = random.NextDouble();
                     vals[j] = (float)v;
                 }
-                data.Add(Guid.NewGuid(), vals);
+                data.Add(i.ToString() + " " + p.Name, vals);
+                i++;
             }
             ///////////////////////////////////////////////////
 
@@ -61,7 +63,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             }
 
             // Write header to file.
-            fid.WriteLine("# Process: xxxxxxxxxxxxxxx");
+            fid.WriteLine("# Output process: xxxxxxxxxxxxxxx");
             fid.WriteLine("# Functional unit: xxxxxxxxxxxxxxx");
             fid.WriteLine("# GREET version: xxxxxxxxxxxxxxxxxx");
             fid.WriteLine("# Database version: xxxxxxxxxxxxxxxx");
@@ -69,13 +71,18 @@ namespace Greet.Plugins.SplitContributions.Buisness
             // Write variable names to file.
             StringBuilder varline = new StringBuilder();
             varline.Append("Process GUID");
+            foreach (string var in outputVars)
+            {
+                varline.Append("," + var);
+            }
+            fid.WriteLine(varline.ToString());
 
             // Write data to file.
-            Dictionary<Guid, float[]> data = ExtractContributions(graph, Guid.NewGuid(), 0, gasOrResourceIDs, v);
+            Dictionary<string, float[]> data = ExtractContributions(graph, Guid.NewGuid(), 0, gasOrResourceIDs, v);
             foreach (var pair in data)
             {
                 StringBuilder line = new StringBuilder();
-                line.Append(pair.Key.ToString());
+                line.Append(pair.Key);
                 foreach (float val in pair.Value)
                 {
                     line.Append(","+val.ToString());
