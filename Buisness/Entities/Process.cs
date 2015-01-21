@@ -14,8 +14,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
     class Process
     {
         #region private members
-        List<Input> _inputs;
-        List<Output> _outputs;
+        List<PInput> _inputs = new List<PInput>();
+        List<POutput> _outputs = new List<POutput>();
         int _processModelId;
         Guid _vertexID;
         CanonicalProcess _processResults;
@@ -39,12 +39,12 @@ namespace Greet.Plugins.SplitContributions.Buisness
             get { return _name; }
             set { _name = value; }
         }
-        public List<Input> Inputs
+        public List<PInput> Inputs
         {
             get { return _inputs; }
             set { _inputs = value; }
         }
-        public List<Output> Outputs
+        public List<POutput> Outputs
         {
             get { return _outputs; }
             set { _outputs = value; }

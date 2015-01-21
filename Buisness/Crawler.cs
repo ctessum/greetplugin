@@ -1,4 +1,5 @@
 ﻿using Greet.DataStructureV3.Interfaces;
+using Greet.Plugins.SplitContributions.Buisness.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -114,7 +115,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         {
             Graph g = new Graph();
 
-            TraceMix(mix, g, null);
+            TraceMix(mix, g);
 
             return g;
         }
@@ -126,13 +127,22 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="mix">The mix we want to trace upstream</param>
         /// <param name="g">The graph that is beeing completed</param>
         /// <param name="p">The process P that uses Mix as a feed</param>
-        private static void TraceMix(IMix mix, Graph g, Process p)
+        /// <returns>Couple of the <ExitVertex, ExitOutput></returns>
+        private static KeyValuePair<Guid, Guid> TraceMix(IMix mix, Graph g)
         {
             Process fakeProcess = new Process();
             g.AddProcess(fakeProcess);
 
+            POutput fakeOutput = new POutput();
+            fakeOutput.Id = Guid.NewGuid();
+            fakeProcess.Outputs.Add(fakeOutput);
+
             foreach (IProductionItem item in mix.FuelProductionEntities)
             {
+                PInput fakeInput = new PInput();
+                fakeInput.Id = Guid.NewGuid();
+                fakeProcess.Inputs.Add(fakeInput);
+
                 if (item.SourceType == Enumerators.SourceType.Mix)
                 {
                     IMix source = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(item.MixOrPathwayId);
@@ -144,13 +154,25 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 else if (item.SourceType == Enumerators.SourceType.Pathway)
                 {
                     IPathway source = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(item.MixOrPathwayId);
-
-                    Flow f = new Flow(Guid.Empty,Guid.Empty,Guid.Empty,Guid.Empty);
+                    KeyValuePair<Guid, Guid> link = TracePathway(source, source.MainOutput, g);
+                    Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
                     g.AddFlow(f);
                 }
                 else
                     throw new Exception("Unknown source type");
             }
+
+            return new KeyValuePair<Guid,Guid>(fakeProcess.VertexID, fakeOutput.Id);
+        }
+
+        private static KeyValuePair<Guid, Guid> TracePathway(IPathway path, Guid output, Graph g)
+        {
+            return new KeyValuePair<Guid,Guid>(Guid.Empty,Guid.Empty);
+        }
+
+        private static KeyValuePair<Guid, Guid> TraceInput(IPathway path, Guid vertexId, Guid inputId, Graph g)
+        {
+            return new KeyValuePair<Guid,Guid>(Guid.Empty, Guid.Empty);
         }
     }
 }
