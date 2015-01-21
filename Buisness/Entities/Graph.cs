@@ -8,7 +8,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
     /// <summary>
     /// Contains an oriented graph made of processes and flows
     /// </summary>
-    class Graph
+    public class Graph
     {
         List<Process> _processes;
         List<Flow> _flows;

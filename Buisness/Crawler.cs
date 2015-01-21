@@ -18,7 +18,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="outputID">The output ID targeted as the starting point</param>
         /// <returns>Graph structure containing all processes</returns>
         public static Graph CrawlPathwayOutput(IPathway path, Guid outputID)
-        //{
+        {
         //    //if the retrieved object is a pathway
         //    IPathway path = tag as IPathway;
         //    //We ask the pathway what is the product defined as the main product for this pathway
