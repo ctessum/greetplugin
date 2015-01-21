@@ -60,7 +60,11 @@ namespace Greet.Plugins.SplitContributions.UI
                 if(resourceTreeNode.Nodes.Count >0)
                     this.treeView1.Nodes.Add(resourceTreeNode);
             }
+            // Add the options for outputs.
+            addOutputs();
         }
+
+        private Graph g; 
 
         /// <summary>
         /// Invoked when the user click on an item in the tree list view
@@ -109,37 +113,61 @@ namespace Greet.Plugins.SplitContributions.UI
                         }
                     }
 
-                    Graph g = Crawler.CrawlPathwayOutput(path, desiredOutput);
+                    g = Crawler.CrawlPathwayOutput(path, desiredOutput);
+
+                    // Viable pathway
+                    buttonSave.Visible = true;
 
                 }
                 else if (tag is IMix)
                 {   //if the retrieved object is a mix
                     IMix mix = tag as IMix;
-                    Graph g = Crawler.CrawlMixOutput(mix);
+                    g = Crawler.CrawlMixOutput(mix);
 
+                    // Viable pathway
+                    buttonSave.Visible = true;
+                }
+                else
+                {
+                    // Not a viable pathway
+                    buttonSave.Visible = false;
                 }
             }
-            buttonSave.Visible = true;
+            else
+            {
+                // Not a viable pathway
+                buttonSave.Visible = false;
+            }
+        }
+
+        // Add the options for variables to be output to the file (pollutants, etc.).
+        private void addOutputs()
+        {
+            var items = outputSelector.Items;
+            // The will be the actual text labels for the pollutants in GREET
+            items.Add("CO2", true);
+            items.Add("NOx", true);
+            items.Add("SO2", true);
+            items.Add("VOC", true);
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
             SaveFileDialog filedata = new SaveFileDialog();
             filedata.FileName = "greet_process.csv";
-            filedata.Filter = "txt files (*.csv)|*.csv|All files (*.*)|*.*";
+            filedata.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
             filedata.ShowDialog();
             System.IO.StreamWriter fid = new System.IO.StreamWriter(filedata.FileName);
 
-            // Sample data ////////////////////////////////////
-            float[] vals = { 1, 2, 3, 4, 5, 6, 1, 2, 3 };
-            Dictionary<Guid, float[]> data = new Dictionary<Guid, float[]>();
-            data.Add(Guid.NewGuid(), vals);
-            data.Add(Guid.NewGuid(), vals);
-            data.Add(Guid.NewGuid(), vals);
-            data.Add(Guid.NewGuid(), vals);
-            ///////////////////////////////////////////////////
-
-            Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, data);
+            // Figure out which variables to output
+            string[] outputVars = new string[outputSelector.CheckedItems.Count];
+            int i = 0;
+            foreach (object itemChecked in outputSelector.CheckedItems)
+            {
+                outputVars[i] = itemChecked.ToString();
+                i++;
+            }
+            Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g);
         }
     }
 }

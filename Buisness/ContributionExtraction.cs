@@ -19,26 +19,68 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="type"></param>
         /// <param name="gasOrResourceID"></param>
         /// <returns></returns>
-        public static Dictionary<Guid, Item> ExtractContributions(Graph graph, Guid startingPoint, int type, int gasOrResourceID, Value functionalUnit)
+        public static Dictionary<Guid, float[]> ExtractContributions(Graph graph, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
         {
-            return null;
+
+            // Sample data ////////////////////////////////////
+            
+            Dictionary<Guid, float[]> data = new Dictionary<Guid, float[]>();
+            Random random = new Random();
+            for (int i = 0; i < 10; i++ )
+            {
+                float[] vals = new float[gasOrResourceIDs.Length];
+                for (int j = 0; j<gasOrResourceIDs.Length; j++)
+                {
+                    double v = random.NextDouble();
+                    vals[j] = (float)v;
+                }
+                data.Add(Guid.NewGuid(), vals);
+            }
+            ///////////////////////////////////////////////////
+
+            return data;
         }
 
         /// <summary>
         /// Saves the extracted values to a file
         /// </summary>
         /// <param name="dictionary"></param>
-        public static void SaveToFile(System.IO.StreamWriter fid, Dictionary<Guid, float[]> data)
+        public static void SaveToFile(System.IO.StreamWriter fid, string[] outputVars, Graph graph)
         {
-            // Use var keyword to enumerate dictionary.
+            Greet.Plugins.SplitContributions.Buisness.Entities.Value v = new Greet.Plugins.SplitContributions.Buisness.Entities.Value();
+
+
+            int[] gasOrResourceIDs = new int[outputVars.Length];
+
+            // This should be replaced with code that gets the actual IDs of the variable names.
+            int i = 0;
+            foreach (string var in outputVars)
+            {
+                gasOrResourceIDs[i] = i;
+                i++;
+            }
+
+            // Write header to file.
+            fid.WriteLine("# Process: xxxxxxxxxxxxxxx");
+            fid.WriteLine("# Functional unit: xxxxxxxxxxxxxxx");
+            fid.WriteLine("# GREET version: xxxxxxxxxxxxxxxxxx");
+            fid.WriteLine("# Database version: xxxxxxxxxxxxxxxx");
+
+            // Write variable names to file.
+            StringBuilder varline = new StringBuilder();
+            varline.Append("Process GUID");
+
+            // Write data to file.
+            Dictionary<Guid, float[]> data = ExtractContributions(graph, Guid.NewGuid(), 0, gasOrResourceIDs, v);
             foreach (var pair in data)
             {
-                string line = pair.Key.ToString();
+                StringBuilder line = new StringBuilder();
+                line.Append(pair.Key.ToString());
                 foreach (float val in pair.Value)
                 {
-                    line+=val.ToString("G");
+                    line.Append(","+val.ToString());
                 }
-                fid.WriteLine(line);
+                fid.WriteLine(line.ToString());
             }
             fid.Close();
         }
