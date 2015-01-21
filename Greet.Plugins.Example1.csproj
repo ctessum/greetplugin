@@ -89,7 +89,9 @@
     <Compile Include="Buisness\Crawler.cs" />
     <Compile Include="Buisness\Entities\Flow.cs" />
     <Compile Include="Buisness\Entities\Graph.cs" />
+    <Compile Include="Buisness\Entities\PInput.cs" />
     <Compile Include="Buisness\Entities\Item.cs" />
+    <Compile Include="Buisness\Entities\POutput.cs" />
     <Compile Include="Buisness\Entities\Process.cs" />
     <Compile Include="Buisness\Entities\Value.cs" />
     <Compile Include="SplitContributions.cs" />
