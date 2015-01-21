@@ -2,9 +2,9 @@
 using System.Windows.Forms;
 using Greet.DataStructureV3.Interfaces;
 using Greet.Model.Interfaces;
-using SplitContributions.UI;
+using Greet.Plugins.SplitContributions.UI;
 
-namespace SplitContributions
+namespace Greet.Plugins.SplitContributions
 {
     /// <summary>
     /// This plugin allows the user to select a pathway output, then calculates the contributions of all processess

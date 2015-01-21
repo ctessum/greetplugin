@@ -8,7 +8,7 @@ using Greet.DataStructureV3.ResultsStorage;
 using Greet.DataStructureV3;
 using Greet.Plugins.SplitContributions.Buisness;
 
-namespace SplitContributions.UI
+namespace Greet.Plugins.SplitContributions.UI
 {
     /// <summary>
     /// A simple form that shows a list of available pathways and mixes

@@ -112,26 +112,45 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <returns>Graph structure containing all processes</returns>
         public static Graph CrawlMixOutput(IMix mix)
         {
-            ////We ask the mix what is the product defined as the main product for this mix
-            //        //then store an integer that corresponds to an IResource.ID
-            //        productID = mix.MainOutputResourceID;
-            //        //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
-            //        var upstream = mix.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
+            Graph g = new Graph();
 
-            //        if (null == upstream.Keys.SingleOrDefault(item => item.ResourceId == productID))
-            //        {
-            //            MessageBox.Show("Selected mix does not produce the fuel selected. Please remove it from the Fule Types list");
-            //            return;
-            //        }
+            TraceMix(mix, g, null);
 
-            //        //a mix has a single output so we can safely do the folowing
-            //        result = upstream.SingleOrDefault(item => item.Key.ResourceId == productID).Value;
-
-            //        //We set the string variable as the name of the pathway
-            //        name = mix.Name;
-
-            return null;
+            return g;
         }
 
+        /// <summary>
+        /// <para>Completes the Graph by adding the upstream found in a mix attached as a feed of the process P</para>
+        /// <para>Mix -> P</para>
+        /// </summary>
+        /// <param name="mix">The mix we want to trace upstream</param>
+        /// <param name="g">The graph that is beeing completed</param>
+        /// <param name="p">The process P that uses Mix as a feed</param>
+        private static void TraceMix(IMix mix, Graph g, Process p)
+        {
+            Process fakeProcess = new Process();
+            g.AddProcess(fakeProcess);
+
+            foreach (IProductionItem item in mix.FuelProductionEntities)
+            {
+                if (item.SourceType == Enumerators.SourceType.Mix)
+                {
+                    IMix source = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(item.MixOrPathwayId);
+
+                    Flow f = new Flow(Guid.Empty,Guid.Empty,Guid.Empty,Guid.Empty);
+                    g.AddFlow(f);
+
+                }
+                else if (item.SourceType == Enumerators.SourceType.Pathway)
+                {
+                    IPathway source = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(item.MixOrPathwayId);
+
+                    Flow f = new Flow(Guid.Empty,Guid.Empty,Guid.Empty,Guid.Empty);
+                    g.AddFlow(f);
+                }
+                else
+                    throw new Exception("Unknown source type");
+            }
+        }
     }
 }

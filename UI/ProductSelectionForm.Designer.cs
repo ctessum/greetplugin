@@ -1,4 +1,4 @@
-﻿namespace SplitContributions.UI
+﻿namespace Greet.Plugins.SplitContributions.UI
 {
     partial class ProductSelectionForm
     {
