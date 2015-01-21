@@ -1,6 +1,6 @@
-﻿namespace Example1.UI
+﻿namespace SplitContributions.UI
 {
-    partial class ResultsSelectionForm
+    partial class ProductSelectionForm
     {
         /// <summary>
         /// Required designer variable.
@@ -30,7 +30,6 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.treeView1 = new System.Windows.Forms.TreeView();
-            this.resultsControl1 = new Example1.UI.ResultsControl();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -40,7 +39,6 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 34.36185F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 65.63815F));
             this.tableLayoutPanel1.Controls.Add(this.treeView1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.resultsControl1, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -57,14 +55,6 @@
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(238, 465);
             this.treeView1.TabIndex = 0;
-            // 
-            // resultsControl1
-            // 
-            this.resultsControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.resultsControl1.Location = new System.Drawing.Point(247, 3);
-            this.resultsControl1.Name = "resultsControl1";
-            this.resultsControl1.Size = new System.Drawing.Size(463, 465);
-            this.resultsControl1.TabIndex = 1;
             // 
             // ResultsSelectionForm
             // 
@@ -83,6 +73,5 @@
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TreeView treeView1;
-        private ResultsControl resultsControl1;
     }
 }

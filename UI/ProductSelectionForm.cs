@@ -7,15 +7,15 @@ using Greet.DataStructureV3.Entities;
 using Greet.DataStructureV3.ResultsStorage;
 using Greet.DataStructureV3;
 
-namespace Example1.UI
+namespace SplitContributions.UI
 {
     /// <summary>
     /// A simple form that shows a list of available pathways and mixes
     /// and display the associated GHGs results when an element is selected
     /// </summary>
-    internal partial class ResultsSelectionForm : Form
+    internal partial class ProductSelectionForm : Form
     {
-        public ResultsSelectionForm()
+        public ProductSelectionForm()
         {
             InitializeComponent();
 
@@ -28,11 +28,11 @@ namespace Example1.UI
         public void InitializeControls()
         {
             //Gets the dictionary of IResource object indexed by IResource.Id
-            IGDataDictionary<int, IResource> resources = ResultsAccess.controler.CurrentProject.Data.Resources;
+            IGDataDictionary<int, IResource> resources = SplitContributions.Controler.CurrentProject.Data.Resources;
             //Gets the dictionary of IPathways object indexed by IPathway.Id
-            IGDataDictionary<int, IPathway> pathways = ResultsAccess.controler.CurrentProject.Data.Pathways;
+            IGDataDictionary<int, IPathway> pathways = SplitContributions.Controler.CurrentProject.Data.Pathways;
             //Gets the dictionary of IMixes object indexed by IMid.Id
-            IGDataDictionary<int, IMix> mixes = ResultsAccess.controler.CurrentProject.Data.Mixes;
+            IGDataDictionary<int, IMix> mixes = SplitContributions.Controler.CurrentProject.Data.Mixes;
 
             this.treeView1.Nodes.Clear();
 
@@ -42,7 +42,7 @@ namespace Example1.UI
                 TreeNode resourceTreeNode = new TreeNode(resource.Name);
                 resourceTreeNode.Tag = resource;
 
-                foreach (IPathway pathway in pathways.AllValues.Where(item => ResultsAccess.controler.CurrentProject.Data.Helper.PathwayMainOutputResouce(item.Id) == resource.Id))
+                foreach (IPathway pathway in pathways.AllValues.Where(item => SplitContributions.Controler.CurrentProject.Data.Helper.PathwayMainOutputResouce(item.Id) == resource.Id))
                 {
                     TreeNode pathwayNode = new TreeNode("Pathway: "+ pathway.Name);
                     pathwayNode.Tag = pathway;
@@ -84,9 +84,9 @@ namespace Example1.UI
                     IPathway path = tag as IPathway;
                     //We ask the pathway what is the product defined as the main product for this pathway
                     //then store an integer that corresponds to an IResource.ID
-                    productID = ResultsAccess.controler.CurrentProject.Data.Helper.PathwayMainOutputResouce(path.Id);
+                    productID = SplitContributions.Controler.CurrentProject.Data.Helper.PathwayMainOutputResouce(path.Id);
                     //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
-                    Dictionary<IIO, IResults> availableResults = path.GetUpstreamResults(ResultsAccess.controler.CurrentProject.Data);
+                    Dictionary<IIO, IResults> availableResults = path.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
                     Guid desiredOutput = new Guid();
                     if (null == availableResults.Keys.SingleOrDefault(item => item.ResourceId == productID))
                     {
@@ -117,7 +117,7 @@ namespace Example1.UI
                         
                     foreach (IVertex vertex in path.Vertices)
                     {
-                        IProcess processModel = ResultsAccess.controler.CurrentProject.Data.Processes.AllValues.Where(item => item.Id == vertex.ModelID) as IProcess;
+                        IProcess processModel = SplitContributions.Controler.CurrentProject.Data.Processes.AllValues.Where(item => item.Id == vertex.ModelID) as IProcess;
                         AProcess processModelReal = processModel as AProcess;
                         Guid vertexId = vertex.ID;
 
@@ -128,7 +128,7 @@ namespace Example1.UI
                            {
                                 CanonicalProcess processResultsStorage = pair.Value;
                                 //will give you results associated with all outputs of a process (Vertex) in the pathway
-                                Dictionary<IIO, Results> processResults = processResultsStorage.GetResults(ResultsAccess.controler.CurrentProject.Data as GData);
+                                Dictionary<IIO, Results> processResults = processResultsStorage.GetResults(SplitContributions.Controler.CurrentProject.Data as GData);
 
                             }
                         }
@@ -175,7 +175,7 @@ namespace Example1.UI
                     //then store an integer that corresponds to an IResource.ID
                     productID = mix.MainOutputResourceID;
                     //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
-                    var upstream = mix.GetUpstreamResults(ResultsAccess.controler.CurrentProject.Data);
+                    var upstream = mix.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
 
                     if (null == upstream.Keys.SingleOrDefault(item => item.ResourceId == productID))
                     {
@@ -190,10 +190,7 @@ namespace Example1.UI
                     name = mix.Name;
                 }
 
-                //if we found a pathway or a mix and we have all the necessary parameters 
-                //we Invoke the SetResults method of our user control in charge of displaying the life cycle upstream results
-                if (result != null && productID != -1 && !String.IsNullOrEmpty(name))
-                    this.resultsControl1.SetResults(name, result, productID);
+
             }
         }
     }
