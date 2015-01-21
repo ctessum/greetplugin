@@ -18,12 +18,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// and if not, inserts the given process to the graph
         /// </summary>
         /// <param name="p"></param>
-        internal void AddProcess(Process p)
+        internal bool AddProcess(Process p)
         {
             if (!_processes.Any(item => item.VertexID == p.VertexID))
+            {
                 _processes.Add(p);
+                return true;
+            }
             else
-                throw new Exception("An process with the same vertexID is already in this graph");
+                return false;
         }
 
         /// <summary>
@@ -37,6 +40,12 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 _flows.Add(f);
             else
                 throw new Exception("An flow with the same start and end point is already in this graph");
+        }
+
+        internal List<Process> Processes
+        {
+            get { return _processes; }
+            set { _processes = value; }
         }
     }
 }

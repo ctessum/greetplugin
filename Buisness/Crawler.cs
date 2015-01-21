@@ -151,30 +151,34 @@ namespace Greet.Plugins.SplitContributions.Buisness
             fakeProcess.ProcessResults = cp;
             fakeProcess.ProcessModelId = processModel.Id;
             fakeProcess.VertexID = vertexID;
-            g.AddProcess(fakeProcess);
+            bool added = g.AddProcess(fakeProcess);
+            if (added)
+            {//this is to prevent crawling double connections -< between two processes in the same pathway
+                POutput fakeOutput = new POutput();
+                fakeOutput.Id = outputId;
+                fakeProcess.Outputs.Add(fakeOutput);
 
-            POutput fakeOutput = new POutput();
-            fakeOutput.Id = outputId;
-            fakeProcess.Outputs.Add(fakeOutput);
-
-            if (processModel is AProcess)
-            {
-                AProcess ap = processModel as AProcess;
-                foreach (Input inp in ap.FlattenInputList)
+                if (processModel is AProcess)
                 {
-                    PInput fakeInput = new PInput();
-                    fakeInput.Id = inp.Id;
-                    fakeProcess.Inputs.Add(fakeInput);
-                    if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
+                    AProcess ap = processModel as AProcess;
+                    foreach (Input inp in ap.FlattenInputList)
                     {
-                        KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);
-                        Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
-                        g.AddFlow(f);
+
+                        PInput fakeInput = new PInput();
+                        fakeInput.Id = inp.Id;
+                        fakeProcess.Inputs.Add(fakeInput);
+                        if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
+                        {
+                            KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);
+                            Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
+                            g.AddFlow(f);
+                        }
                     }
                 }
+                return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, fakeOutput.Id);
             }
-
-            return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, fakeOutput.Id);
+            else
+                return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, outputId);
         }
     }
 }
