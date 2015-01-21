@@ -1,4 +1,6 @@
-﻿using Greet.DataStructureV3.Interfaces;
+﻿using Greet.DataStructureV3.Entities;
+using Greet.DataStructureV3.Interfaces;
+using Greet.DataStructureV3.ResultsStorage;
 using Greet.Plugins.SplitContributions.Buisness.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,89 +22,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <returns>Graph structure containing all processes</returns>
         public static Graph CrawlPathwayOutput(IPathway path, Guid outputID)
         {
-        //    //if the retrieved object is a pathway
-        //    IPathway path = tag as IPathway;
-        //    //We ask the pathway what is the product defined as the main product for this pathway
-        //    //then store an integer that corresponds to an IResource.ID
-        //    productID = SplitContributions.Controler.CurrentProject.Data.Helper.PathwayMainOutputResouce(path.Id);
-        //    //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
-        //    Dictionary<IIO, IResults> availableResults = path.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
-        //    Guid desiredOutput = new Guid();
-        //    if (null == availableResults.Keys.SingleOrDefault(item => item.ResourceId == productID))
-        //    {
-        //        MessageBox.Show("Selected pathway does not produce the fuel selected. Please remove it from the Fuel Types list");
-        //        return;
-        //    }
-        //    else
-        //    {
-        //        foreach (IIO io in availableResults.Keys.Where(item => item.ResourceId == productID))
-        //        {
-        //            desiredOutput = io.Id;
-        //            result = availableResults.SingleOrDefault(item => item.Key.Id == desiredOutput).Value;
-        //            if (io.Id == path.MainOutput)
-        //            {
-        //                desiredOutput = io.Id;
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    result = availableResults.SingleOrDefault(item => item.Key.Id == desiredOutput).Value;
-        //    //We set the string variable as the name of the pathway
-        //    name = path.Name;
+            Graph g = new Graph();
 
+            TracePathway(path, path.MainOutput, g);
 
-        //    foreach (IVertex vertex in path.Vertices)
-        //    {
-        //        IProcess processModel = SplitContributions.Controler.CurrentProject.Data.Processes.AllValues.Where(item => item.Id == vertex.ModelID) as IProcess;
-        //        AProcess processModelReal = processModel as AProcess;
-        //        Guid vertexId = vertex.ID;
-
-        //        Pathway p = path as Pathway;
-        //        foreach (KeyValuePair<Guid, CanonicalProcess> pair in p.CanonicalProcesses)
-        //        {
-        //            if (pair.Key == vertexId)
-        //            {
-        //                CanonicalProcess processResultsStorage = pair.Value;
-        //                //will give you results associated with all outputs of a process (Vertex) in the pathway
-        //                Dictionary<IIO, Results> processResults = processResultsStorage.GetResults(SplitContributions.Controler.CurrentProject.Data as GData);
-
-        //            }
-        //        }
-
-
-        //        if (processModel is StationaryProcess)
-        //        {
-        //            StationaryProcess sp = processModelReal as StationaryProcess;
-
-        //            foreach (IIO output in sp.FlattenAllocatedOutputList)
-        //            {
-        //                Guid outID = output.Id;
-        //            }
-        //            foreach (IIO input in sp.FlattenInputList)
-        //            {
-        //                Guid inpID = input.Id;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            TransportationProcess tp = processModelReal as TransportationProcess;
-        //        }
-
-
-        //    }
-
-        //    foreach (IEdge edge in path.Edges)
-        //    {
-        //        Guid vertexFlowStart = edge.OutputVertexID;
-        //        Guid outputFlowStart = edge.OutputID;
-
-        //        Guid vertexFlowEnd = edge.InputVertexID;
-        //        Guid inputFlowEnd = edge.InputID;
-        //    }
-
-                      
-            return null;
-
+            return g;
         }
 
         /// <summary>
@@ -131,6 +55,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         private static KeyValuePair<Guid, Guid> TraceMix(IMix mix, Graph g)
         {
             Process fakeProcess = new Process();
+            fakeProcess.VertexID = Guid.NewGuid();
             g.AddProcess(fakeProcess);
 
             POutput fakeOutput = new POutput();
@@ -146,8 +71,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 if (item.SourceType == Enumerators.SourceType.Mix)
                 {
                     IMix source = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(item.MixOrPathwayId);
-
-                    Flow f = new Flow(Guid.Empty,Guid.Empty,Guid.Empty,Guid.Empty);
+                    KeyValuePair<Guid, Guid> link = TraceMix(source, g);
+                    Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
                     g.AddFlow(f);
 
                 }
@@ -167,12 +92,89 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
         private static KeyValuePair<Guid, Guid> TracePathway(IPathway path, Guid output, Graph g)
         {
-            return new KeyValuePair<Guid,Guid>(Guid.Empty,Guid.Empty);
+            IIO pathOutput = path.Outputs.Single(item => item.Id == output);
+            PMOutput pOut = pathOutput as PMOutput;
+            IEdge eOut = path.Edges.Single(item => item.InputVertexID == pOut.Id && item.InputID == pOut.Id);
+
+            KeyValuePair<Guid,Guid> fakeProcess = TraceProcess(path, eOut.OutputVertexID, eOut.OutputID, g);
+
+            return new KeyValuePair<Guid, Guid>(fakeProcess.Key, fakeProcess.Value);
         }
 
-        private static KeyValuePair<Guid, Guid> TraceInput(IPathway path, Guid vertexId, Guid inputId, Graph g)
+        private static KeyValuePair<Guid, Guid> TraceInput(IPathway path, Guid vertexId, Input input, Graph g)
         {
-            return new KeyValuePair<Guid,Guid>(Guid.Empty, Guid.Empty);
+            if (input.Source == Enumerators.SourceType.Mix)
+            {
+                IMix source = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(input.SourceMixOrPathwayID);
+                KeyValuePair<Guid, Guid> link = TraceMix(source, g);
+                return new KeyValuePair<Guid, Guid>(link.Key, link.Value);
+            }
+            else if (input.Source == Enumerators.SourceType.Pathway)
+            {
+                IPathway source = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(input.SourceMixOrPathwayID);
+                KeyValuePair<Guid, Guid> link = TracePathway(source, source.MainOutput, g);
+                return new KeyValuePair<Guid, Guid>(link.Key, link.Value);
+            }
+            else if (input.Source == Enumerators.SourceType.Previous)
+            {
+                IEdge edge = path.Edges.Single(item => item.InputVertexID == vertexId && item.InputID == input.Id);
+                IVertex previousVertex = path.Vertices.Single(item => item.ID == edge.OutputVertexID);
+
+                if (previousVertex.Type == 0)
+                { //a process
+                    TraceProcess(path, previousVertex.ID, edge.OutputID, g);
+                }
+                if (previousVertex.Type == 1)
+                { //a pathway
+                    IPathway prevPath = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(previousVertex.ModelID);
+                    TracePathway(prevPath, prevPath.MainOutput, g);
+                }
+                if (previousVertex.Type == 2)
+                { //a mix
+                    IMix prevMix = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(previousVertex.ModelID);
+                    TraceMix(prevMix, g);
+                }
+
+                return new KeyValuePair<Guid, Guid>(edge.OutputVertexID, edge.OutputID);
+            }
+            throw new Exception("Input source must be Mix, Pathway or Previous");
+        }
+
+        private static KeyValuePair<Guid, Guid> TraceProcess(IPathway path, Guid vertexID, Guid outputId, Graph g)
+        {
+            IVertex previousVertex = path.Vertices.Single(item => item.ID == vertexID);
+            IProcess processModel = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(previousVertex.ModelID);
+            CanonicalProcess cp = (path as Pathway).CanonicalProcesses[vertexID];
+
+            Process fakeProcess = new Process();
+            fakeProcess.Name = processModel.Name;
+            fakeProcess.ProcessResults = cp;
+            fakeProcess.ProcessModelId = processModel.Id;
+            fakeProcess.VertexID = vertexID;
+            g.AddProcess(fakeProcess);
+
+            POutput fakeOutput = new POutput();
+            fakeOutput.Id = outputId;
+            fakeProcess.Outputs.Add(fakeOutput);
+
+            if (processModel is AProcess)
+            {
+                AProcess ap = processModel as AProcess;
+                foreach (Input inp in ap.FlattenInputList)
+                {
+                    PInput fakeInput = new PInput();
+                    fakeInput.Id = inp.Id;
+                    fakeProcess.Inputs.Add(fakeInput);
+                    if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
+                    {
+                        KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);
+                        Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
+                        g.AddFlow(f);
+                    }
+                }
+            }
+
+            return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, fakeOutput.Id);
         }
     }
 }

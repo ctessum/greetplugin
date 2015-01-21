@@ -90,7 +90,7 @@ namespace Greet.Plugins.SplitContributions.UI
                     //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
                     Dictionary<IIO, IResults> availableResults = path.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
                     Guid desiredOutput = new Guid();
-                    if (null == availableResults.Keys.SingleOrDefault(item => item.ResourceId == productID))
+                    if (!availableResults.Keys.Any(item => item.ResourceId == productID))
                     {
                         MessageBox.Show("Selected pathway does not produce the fuel selected. Please remove it from the Fuel Types list");
                         return;
