@@ -8,7 +8,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
     /// <summary>
     /// An item represents a pollutant or a resource for which we calculated a quantity
     /// </summary>
-   public class Item
+    public class Item
     {
         Value _value;
         String _name;

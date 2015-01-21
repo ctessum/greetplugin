@@ -8,7 +8,7 @@ using Greet.DataStructureV3.ResultsStorage;
 using Greet.DataStructureV3;
 using Greet.Plugins.SplitContributions.Buisness;
 
-namespace SplitContributions.UI
+namespace Greet.Plugins.SplitContributions.UI
 {
     /// <summary>
     /// A simple form that shows a list of available pathways and mixes
@@ -81,7 +81,8 @@ namespace SplitContributions.UI
                 string name = "";
 
                 if (tag is IPathway)
-                {//if the retrieved object is a pathway
+                {
+                    //if the retrieved object is a pathway
                     IPathway path = tag as IPathway;
                     //We ask the pathway what is the product defined as the main product for this pathway
                     //then store an integer that corresponds to an IResource.ID
@@ -107,91 +108,16 @@ namespace SplitContributions.UI
                             }
                         }
                     }
-                    result = availableResults.SingleOrDefault(item => item.Key.Id == desiredOutput).Value;
-                    //We set the string variable as the name of the pathway
-                    name = path.Name;
 
-
-                    
-                    
-                        
-                        
-                    foreach (IVertex vertex in path.Vertices)
-                    {
-                        IProcess processModel = SplitContributions.Controler.CurrentProject.Data.Processes.AllValues.Where(item => item.Id == vertex.ModelID) as IProcess;
-                        AProcess processModelReal = processModel as AProcess;
-                        Guid vertexId = vertex.ID;
-
-                        Pathway p = path as Pathway;
-                        foreach (KeyValuePair<Guid, CanonicalProcess> pair in p.CanonicalProcesses)
-                        {
-                           if (pair.Key == vertexId)
-                           {
-                                CanonicalProcess processResultsStorage = pair.Value;
-                                //will give you results associated with all outputs of a process (Vertex) in the pathway
-                                Dictionary<IIO, Results> processResults = processResultsStorage.GetResults(SplitContributions.Controler.CurrentProject.Data as GData);
-
-                            }
-                        }
-
-
-                        if (processModel is StationaryProcess)
-                        {
-                            StationaryProcess sp = processModelReal as StationaryProcess;
-
-                            foreach(IIO output in sp.FlattenAllocatedOutputList)
-                            {
-                                Guid outID = output.Id;
-                            }
-                            foreach(IIO input in sp.FlattenInputList)
-                            {
-                                Guid inpID = input.Id;
-                            }
-                        }
-                        else
-                        {
-                            TransportationProcess tp = processModelReal as TransportationProcess;
-                        }
-
-
-                    }
-
-                    foreach (IEdge edge in path.Edges)
-                    {
-                        Guid vertexFlowStart = edge.OutputVertexID;
-                        Guid outputFlowStart = edge.OutputID;
-
-                        Guid vertexFlowEnd = edge.InputVertexID;
-                        Guid inputFlowEnd = edge.InputID;
-                    }
-
-                      
-
+                    Graph g = Crawler.CrawlPathwayOutput(path, desiredOutput);
 
                 }
                 else if (tag is IMix)
-                {//if the retrieved object is a mix
+                {   //if the retrieved object is a mix
                     IMix mix = tag as IMix;
-                    //We ask the mix what is the product defined as the main product for this mix
-                    //then store an integer that corresponds to an IResource.ID
-                    productID = mix.MainOutputResourceID;
-                    //We use the ID of the Resource that corresponds to the main output of the pathway to get the correct results
-                    var upstream = mix.GetUpstreamResults(SplitContributions.Controler.CurrentProject.Data);
+                    Graph g = Crawler.CrawlMixOutput(mix);
 
-                    if (null == upstream.Keys.SingleOrDefault(item => item.ResourceId == productID))
-                    {
-                        MessageBox.Show("Selected mix does not produce the fuel selected. Please remove it from the Fule Types list");
-                        return;
-                    }
-
-                    //a mix has a single output so we can safely do the folowing
-                    result = upstream.SingleOrDefault(item => item.Key.ResourceId == productID).Value;
-
-                    //We set the string variable as the name of the pathway
-                    name = mix.Name;
                 }
-
-
             }
             buttonSave.Visible = true;
         }
