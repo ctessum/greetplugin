@@ -1,4 +1,5 @@
 ﻿using Greet.Plugins.SplitContributions.Buisness.Entities;
+using Greet.DataStructureV3.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,19 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <returns></returns>
         public static Dictionary<string, float[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
         {
+           // foreach (Process p in g.Processes) 
+           // {
+           //     string name = p.Name;
+           //     foreach (PInput i in p.Inputs) {
+           //         IProcess inputProcess = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(i.Id);
+           //         string inputName = inputProcess.Name;
+           //     }
+           //     foreach (POutput o in p.Outputs)
+           //     {
+           //         IProcess outputProcess = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(o.Id);
+           //         string outputName = outputProcess.Name;
+           //     }
+           // }
 
             // Sample data ////////////////////////////////////
             
@@ -35,7 +49,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                     double v = random.NextDouble();
                     vals[j] = (float)v;
                 }
-                data.Add(i.ToString() + " " + p.Name, vals);
+                data.Add(i.ToString() + " " + p.Name + "," + p.ProcessModelId, vals);
                 i++;
             }
             ///////////////////////////////////////////////////
@@ -70,7 +84,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
             // Write variable names to file.
             StringBuilder varline = new StringBuilder();
-            varline.Append("Process GUID");
+            varline.Append("Process name, Process Model ID");
             foreach (string var in outputVars)
             {
                 varline.Append("," + var);
