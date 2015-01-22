@@ -70,5 +70,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
             set { _endInput = value; }
         }
         #endregion
+
+        internal static Flow Clone(Flow f)
+        {
+            Flow c = new Flow(f.StartVertex, f.StartOutput, f.EndVertex, f.EndInput);
+            return c;
+        }
     }
 }
