@@ -49,12 +49,20 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 {
                     foreach(PInput input in p.Inputs)
                     {
-                        // The flow describes the link between and process requiring an input (and the 
+                        // The flow describes the link between and process requiring an input (p)
+                        // and the process providing the output (op).
                         Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
-                        Process ip = g.Processes.Single(item => item.VertexID == flow.EndVertex);
-                        Process op = g.Processes.Single(item => item.VertexID == flow.StartVertex);
-                        POutput output = g.Outputs.Single()
-                        ip.Quantity += input.Quantity * p.Quantity;
+                        
+                        // op is the process providing the output. It is at the start vertex of the flow.
+                        Process previousProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
+                        //POutput output = g.Outputs.Single(item => flow.StartOutput == item.Id);
+                        
+                        // The new quantity of the process providing the output (op) is the amount of the current
+                        // process (p) times the amount required by the input (input).
+                       
+                        POutput previousProcessOutput = previousProcess.Outputs.Single(item => item.Id == flow.StartOutput);
+                        Value previousProcessQuantity = previousProcessOutput.Quantity;
+                        previousProcess.Quantity += input.Quantity * p.Quantity / previousProcessQuantity;
                     }
                     //foreach(POutput output in p.Outputs)
                     //{

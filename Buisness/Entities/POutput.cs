@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Greet.DataStructureV3.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         Guid _id;
         Value _quantity;
         int _resourceID;
+        Boolean _isDisplaved = false;
         #endregion
 
         #region public accessors
