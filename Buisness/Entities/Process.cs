@@ -18,6 +18,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         List<POutput> _outputs = new List<POutput>();
         int _processModelId;
         Guid _vertexID;
+        CanonicalProcess _processResults;
         String _name;
         Value _quantity;
         Value _previousQuantity;
@@ -25,6 +26,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
         #region public accessors
 
+        public CanonicalProcess ProcessResults
+        {
+            get { return _processResults; }
+            set { _processResults = value; }
+        }
         public Guid VertexID
         {
             get { return _vertexID; }

@@ -70,10 +70,5 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         }
 
 
-
-        internal static Value Clone(Value value)
-        {
-            return new Value(value.Val, value.Unit);
-        }
     }
 }
