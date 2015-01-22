@@ -107,11 +107,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// Saves the extracted values to a file
         /// </summary>
         /// <param name="dictionary"></param>
-        public static void SaveToFile(System.IO.StreamWriter fid, string[] outputVars, Graph graph)
+        public static void SaveToFile(System.IO.StreamWriter fid, string[] outputVars, Graph graph, Guid startingOutputId, Value functionalUnit)
         {
-            Greet.Plugins.SplitContributions.Buisness.Entities.Value v = new Greet.Plugins.SplitContributions.Buisness.Entities.Value();
-
-
             int[] gasOrResourceIDs = new int[outputVars.Length];
 
             // This should be replaced with code that gets the actual IDs of the variable names.
@@ -138,7 +135,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             fid.WriteLine(varline.ToString());
 
             // Write data to file.
-            Dictionary<string, float[]> data = ExtractContributions(graph, Guid.NewGuid(), 0, gasOrResourceIDs, v);
+            Dictionary<string, float[]> data = ExtractContributions(graph, startingOutputId, 0, gasOrResourceIDs, functionalUnit);
             foreach (var pair in data)
             {
                 StringBuilder line = new StringBuilder();

@@ -20,13 +20,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="path">The pathway we want to crawl</param>
         /// <param name="outputID">The output ID targeted as the starting point</param>
         /// <returns>Graph structure containing all processes</returns>
-        public static Graph CrawlPathwayOutput(IPathway path, Guid outputID)
+        public static KeyValuePair<Guid, Guid> CrawlPathwayOutput(IPathway path, Guid outputID, out Graph g)
         {
-            Graph g = new Graph();
+            g = new Graph();
+            return TracePathway(path, path.MainOutput, g);
 
-            TracePathway(path, path.MainOutput, g);
-
-            return g;
         }
 
         /// <summary>
@@ -35,13 +33,10 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="path">The pathway we want to crawl</param>
         /// <param name="outputID">The output ID targeted as the starting point</param>
         /// <returns>Graph structure containing all processes</returns>
-        public static Graph CrawlMixOutput(IMix mix)
+        public static KeyValuePair<Guid, Guid> CrawlMixOutput(IMix mix, out Graph g)
         {
-            Graph g = new Graph();
-
-            TraceMix(mix, g);
-
-            return g;
+            g = new Graph();
+            return TraceMix(mix, g);
         }
 
         /// <summary>

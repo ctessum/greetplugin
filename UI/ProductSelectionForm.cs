@@ -63,8 +63,10 @@ namespace Greet.Plugins.SplitContributions.UI
             addOutputs();
         }
 
-        Graph CrawlSelected()
+        KeyValuePair<Guid, Guid> CrawlSelected(out Graph g)
         {
+            g = new Graph();
+
             if (this.treeView1.SelectedNode != null)
             {
                 Object tag = this.treeView1.SelectedNode.Tag;
@@ -85,7 +87,7 @@ namespace Greet.Plugins.SplitContributions.UI
                     if (!availableResults.Keys.Any(item => item.ResourceId == productID))
                     {
                         MessageBox.Show("Selected pathway does not produce the fuel selected. Please remove it from the Fuel Types list");
-                        return null;
+                        return new KeyValuePair<Guid, Guid>(Guid.Empty, Guid.Empty);
                     }
                     else
                     {
@@ -101,15 +103,15 @@ namespace Greet.Plugins.SplitContributions.UI
                         }
                     }
 
-                    return Crawler.CrawlPathwayOutput(path, desiredOutput);
+                    return Crawler.CrawlPathwayOutput(path, desiredOutput, out g);
                 }
                 else if (tag is IMix)
                 {   //if the retrieved object is a mix
                     IMix mix = tag as IMix;
-                    return Crawler.CrawlMixOutput(mix);
+                    return Crawler.CrawlMixOutput(mix, out g);
                 }
             }
-            return null;
+            return new KeyValuePair<Guid, Guid>(Guid.Empty, Guid.Empty);
         }
 
         // Add the options for variables to be output to the file (pollutants, etc.).
@@ -125,9 +127,12 @@ namespace Greet.Plugins.SplitContributions.UI
         private void buttonSave_Click(object sender, EventArgs e)
         {
             //Crawls the selected item to extract it's graph structure
-            Graph g = CrawlSelected();
+            Graph g = new Graph();
+            KeyValuePair<Guid, Guid> link = CrawlSelected(out g);
 
-            if (g == null)
+            if (g == null
+                || !g.Processes.Any(item => item.VertexID == link.Key)
+                || link.Value == Guid.Empty)
             {
                 MessageBox.Show("Not a viable pathway/mix selected or crawling error");
                 return;
@@ -148,7 +153,9 @@ namespace Greet.Plugins.SplitContributions.UI
                 i++;
             }
 
-            Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g);
+            Greet.Plugins.SplitContributions.Buisness.Entities.Value functionalUnit = new Greet.Plugins.SplitContributions.Buisness.Entities.Value();
+
+            Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g, link.Value, functionalUnit);
         }
     }
 }
