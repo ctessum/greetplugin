@@ -49,13 +49,18 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 {
                     foreach(PInput input in p.Inputs)
                     {
-                        // The flow describes the link between and process requiring an input (p)
-                        // and the process providing the output (previousProcess).
+                        // Some flows and processes are not currently tracked. If the flow is not tracked, continue on.
                         if(!g.Flows.Any(item => item.EndVertex == p.VertexID && item.EndInput == input.Id))
                             continue; // Change to exception later.
 
+                        // The flow describes the link between and process requiring an input (p)
+                        // and the process providing the output (previousProcess).
                         Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
-                        
+
+                        // Some flows and processes are not currently tracked. If the flow is not tracked, continue on.
+                        if (!g.Processes.Any(item => item.VertexID == flow.StartVertex))
+                            continue; // Change to exception later.
+
                         // previousProcess is the process providing the output. It is at the start vertex of the flow.
                         Process previousProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
                       
