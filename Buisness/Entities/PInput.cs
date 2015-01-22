@@ -15,9 +15,17 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         int _mixOrPathwayID;
         Value _quantity;
         Greet.DataStructureV3.Interfaces.Enumerators.SourceType _source;
+        int _resourceID;
+
+        
         #endregion
 
         #region public accessors
+        public int ResourceID
+        {
+            get { return _resourceID; }
+            set { _resourceID = value; }
+        }
         public Guid Id
         {
             get { return _id; }

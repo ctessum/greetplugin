@@ -21,38 +21,84 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="gasOrResourceID"></param>
         /// <returns></returns>
         public static Dictionary<string, float[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
-        {
-           // foreach (Process p in g.Processes) 
-           // {
-           //     string name = p.Name;
-           //     foreach (PInput i in p.Inputs) {
-           //         IProcess inputProcess = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(i.Id);
-           //         string inputName = inputProcess.Name;
-           //     }
-           //     foreach (POutput o in p.Outputs)
-           //     {
-           //         IProcess outputProcess = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(o.Id);
-           //         string outputName = outputProcess.Name;
-           //     }
-           // }
+        {           
+            //int resourceId = -1;
+            //IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(resourceId);
+            //IValue value = resource.ConvertTo("kilograms", new Value(1, "energy"));
 
-            // Sample data ////////////////////////////////////
-            
-            Dictionary<string, float[]> data = new Dictionary<string, float[]>();
-            Random random = new Random();
-            int i = 0;
-            foreach (Process p in g.Processes)
+            Process startingProcess = g.Processes.Single(item => item.Outputs.Any(oo => oo.Id == startingPoint));
+
+            // Find the amount of each process that is required to create the output process.
+            bool firstIteration = true;
+            while(true) 
             {
-                float[] vals = new float[gasOrResourceIDs.Length];
-                for (int j = 0; j<gasOrResourceIDs.Length; j++)
+                foreach(Process p in g.Processes) // Prepare for this iteration
                 {
-                    double v = random.NextDouble();
-                    vals[j] = (float)v;
+                    p.PreviousQuantity = p.Quantity; // Does this copy the value or is it a pointer?
+                    if (p.VertexID==startingProcess.VertexID) // Does this work?
+                    {
+                         POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
+                         p.Quantity = startingOutput.Quantity;
+                    }
+                    else
+                    {
+                        p.Quantity.Val = 0.; // Amount for this iteration will be calculated based on previous amount.
+                    }
                 }
-                data.Add(i.ToString() + " " + p.Name + "," + p.ProcessModelId, vals);
-                i++;
+                foreach(Process p in g.Processes) 
+                {
+                    foreach(PInput input in p.Inputs)
+                    {
+                        // The flow describes the link between and process requiring an input (and the 
+                        Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
+                        Process ip = g.Processes.Single(item => item.VertexID == flow.EndVertex);
+                        Process op = g.Processes.Single(item => item.VertexID == flow.StartVertex);
+                        POutput output = g.Outputs.Single()
+                        ip.Quantity += input.Quantity * p.Quantity;
+                    }
+                    //foreach(POutput output in p.Outputs)
+                    //{
+                    //    Process op = g.Processes.Single(item => item.Inputs.Any(oo => oo.Id == output.Id));
+                    //    op.Quantity += output.Quantity * p.Quantity;         
+                    //}
+                }
+                if (!firstIteration) // Check for convergence
+                {
+                    bool converged = true;
+                    foreach (Process p in g.Processes)
+                    {
+                        if (!p.CheckConverged()) 
+                        {
+                            converged = false;
+                        }
+                    }
+                    if (converged) 
+                    {
+                        break;
+                    }
+                }
+                else 
+                {
+                    firstIteration = false;
+                }
             }
-            ///////////////////////////////////////////////////
+
+            Dictionary<string, float[]> data = new Dictionary<string, float[]>(); 
+            Random random = new Random(); 
+            int i = 0; 
+            foreach (Process p in g.Processes)
+            { 
+                int numVars = gasOrResourceIDs.Length+1;
+                float[] vals = new float[numVars];
+                vals[j] = p.Quantity.Value;
+                for (int j = 1; j<numVars; j++) 
+                { 
+                    double v = random.NextDouble(); 
+                    vals[j] = (float)v; 
+                } 
+                data.Add(i.ToString() + " " + p.Name + "," + p.ProcessModelId, vals); 
+                i++; 
+            } 
 
             return data;
         }
@@ -84,7 +130,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
             // Write variable names to file.
             StringBuilder varline = new StringBuilder();
-            varline.Append("Process name, Process Model ID");
+            varline.Append("Process name, Process Model ID, amount");
             foreach (string var in outputVars)
             {
                 varline.Append("," + var);

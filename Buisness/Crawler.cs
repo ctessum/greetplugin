@@ -62,16 +62,21 @@ namespace Greet.Plugins.SplitContributions.Buisness
             POutput fakeOutput = new POutput();
             fakeOutput.Id = Guid.NewGuid();
             fakeProcess.Outputs.Add(fakeOutput);
+            fakeOutput.ResourceID = mix.MainOutputResourceID;
+            Mix m = mix as Mix;
+            fakeOutput.Quantity = new Value(1, m.mixOutputResults.Results.FunctionalUnit);
 
             foreach (IProductionItem item in mix.FuelProductionEntities)
             {
                 PInput fakeInput = new PInput();
                 fakeInput.Id = Guid.NewGuid();
                 fakeProcess.Inputs.Add(fakeInput);
-
+                fakeInput.Quantity = new Value(1 * item.Share, m.mixOutputResults.Results.FunctionalUnit);
+                
                 if (item.SourceType == Enumerators.SourceType.Mix)
                 {
                     IMix source = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(item.MixOrPathwayId);
+                    fakeInput.ResourceID = source.MainOutputResourceID;
                     KeyValuePair<Guid, Guid> link = TraceMix(source, g);
                     Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
                     g.AddFlow(f);
@@ -80,6 +85,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 else if (item.SourceType == Enumerators.SourceType.Pathway)
                 {
                     IPathway source = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(item.MixOrPathwayId);
+                    fakeInput.ResourceID = source.MainOutputResourceID;
                     KeyValuePair<Guid, Guid> link = TracePathway(source, source.MainOutput, g);
                     Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
                     g.AddFlow(f);
@@ -188,12 +194,19 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 if (processModel is AProcess)
                 {
                     AProcess ap = processModel as AProcess;
+                    AOutput output = ap.FlattenAllocatedOutputList.Single(item => item.Id == outputId) as AOutput;
+                    fakeOutput.Quantity = new Value(output.AmountAfterLossesBufffer.ValueInDefaultUnit, output.AmountAfterLossesBufffer.QuantityName);
+                    fakeOutput.ResourceID = output.ResourceId;
+
                     foreach (Input inp in ap.FlattenInputList)
                     {
 
                         PInput fakeInput = new PInput();
                         fakeInput.Id = inp.Id;
                         fakeProcess.Inputs.Add(fakeInput);
+                        fakeInput.Quantity = new Value(inp.AmountForCalculations.ValueInDefaultUnit, inp.AmountForCalculations.QuantityName);
+                        fakeInput.ResourceID = inp.ResourceId;
+
                         if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
                         {
                             KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);

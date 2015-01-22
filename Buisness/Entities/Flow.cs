@@ -14,7 +14,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         Guid _startVertex;
         Guid _startOutput;
         Guid _endVertex;
-        Guid _endOutput;
+        Guid _endInput;
         #endregion
 
         /// <summary>
@@ -23,13 +23,13 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="startVertex"></param>
         /// <param name="startOutput"></param>
         /// <param name="endVertex"></param>
-        /// <param name="endOutput"></param>
-        public Flow(Guid startVertex, Guid startOutput, Guid endVertex, Guid endOutput)
+        /// <param name="endInput"></param>
+        public Flow(Guid startVertex, Guid startOutput, Guid endVertex, Guid endInput)
         {
             _startVertex = startVertex;
             _startOutput = startOutput;
             _endVertex = endVertex;
-            _endOutput = endOutput;
+            _endInput = endInput;
         }
 
         public override bool Equals(object obj)
@@ -40,7 +40,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 return o.StartVertex == this.StartVertex
                     && o.StartOutput == this.StartOutput
                     && o.EndVertex == this.EndVertex
-                    && o.EndOutput == this.EndOutput;
+                    && o.EndInput == this.EndInput;
             }
             return base.Equals(obj);
         }
@@ -64,10 +64,10 @@ namespace Greet.Plugins.SplitContributions.Buisness
             set { _endVertex = value; }
         }
 
-        public Guid EndOutput
+        public Guid EndInput
         {
-            get { return _endOutput; }
-            set { _endOutput = value; }
+            get { return _endInput; }
+            set { _endInput = value; }
         }
         #endregion
     }

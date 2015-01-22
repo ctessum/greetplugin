@@ -20,6 +20,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
         Guid _vertexID;
         CanonicalProcess _processResults;
         String _name;
+        Value _quantity;
+        Value _previousQuantity;
         #endregion
 
         #region public accessors
@@ -53,6 +55,26 @@ namespace Greet.Plugins.SplitContributions.Buisness
         {
             get { return _processModelId; }
             set { _processModelId = value; }
+        }
+        public Value Quantity
+        {
+            get { return _quantity; }
+            set { _quantity = value; }
+        }
+        public Value PreviousQuantity
+        {
+            get { return _previousQuantity; }
+            set { _previousQuantity = value; }
+        }
+        public bool CheckConverged()
+        {
+            const double tolerance = 1e-9;
+            double a = _quantity.Value;
+            double b = _previousQuantity.Value;
+            if (a == b || Math.Abs(a-b)/(a+b) < tolerance) {
+                return true;
+	        }
+            return false;
         }
         #endregion
     }

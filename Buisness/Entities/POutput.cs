@@ -13,9 +13,15 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         #region private members
         Guid _id;
         Value _quantity;
+        int _resourceID;
         #endregion
 
         #region public accessors
+        public int ResourceID
+        {
+            get { return _resourceID; }
+            set { _resourceID = value; }
+        }
         public Guid Id
         {
             get { return _id; }
