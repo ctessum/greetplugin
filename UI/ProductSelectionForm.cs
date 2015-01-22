@@ -19,8 +19,6 @@ namespace Greet.Plugins.SplitContributions.UI
         public ProductSelectionForm()
         {
             InitializeComponent();
-
-            this.treeView1.MouseDown += new MouseEventHandler(treeView1_MouseDown);
         }
 
         /// <summary>
@@ -60,23 +58,13 @@ namespace Greet.Plugins.SplitContributions.UI
                 if(resourceTreeNode.Nodes.Count >0)
                     this.treeView1.Nodes.Add(resourceTreeNode);
             }
+
             // Add the options for outputs.
             addOutputs();
         }
 
-        private Graph g; 
-
-        /// <summary>
-        /// Invoked when the user click on an item in the tree list view
-        /// Retrieve the IPathway or IMix object stored in the tag and sends it to the ResultsControl 
-        /// for displaying the results associated with that pathway or mix main output
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void treeView1_MouseDown(object sender, MouseEventArgs e)
+        Graph CrawlSelected()
         {
-            treeView1.SelectedNode = treeView1.GetNodeAt(e.Location);
-
             if (this.treeView1.SelectedNode != null)
             {
                 Object tag = this.treeView1.SelectedNode.Tag;
@@ -97,7 +85,7 @@ namespace Greet.Plugins.SplitContributions.UI
                     if (!availableResults.Keys.Any(item => item.ResourceId == productID))
                     {
                         MessageBox.Show("Selected pathway does not produce the fuel selected. Please remove it from the Fuel Types list");
-                        return;
+                        return null;
                     }
                     else
                     {
@@ -113,31 +101,15 @@ namespace Greet.Plugins.SplitContributions.UI
                         }
                     }
 
-                    g = Crawler.CrawlPathwayOutput(path, desiredOutput);
-
-                    // Viable pathway
-                    buttonSave.Visible = true;
-
+                    return Crawler.CrawlPathwayOutput(path, desiredOutput);
                 }
                 else if (tag is IMix)
                 {   //if the retrieved object is a mix
                     IMix mix = tag as IMix;
-                    g = Crawler.CrawlMixOutput(mix);
-
-                    // Viable pathway
-                    buttonSave.Visible = true;
-                }
-                else
-                {
-                    // Not a viable pathway
-                    buttonSave.Visible = false;
+                    return Crawler.CrawlMixOutput(mix);
                 }
             }
-            else
-            {
-                // Not a viable pathway
-                buttonSave.Visible = false;
-            }
+            return null;
         }
 
         // Add the options for variables to be output to the file (pollutants, etc.).
@@ -145,14 +117,22 @@ namespace Greet.Plugins.SplitContributions.UI
         {
             var items = outputSelector.Items;
             // The will be the actual text labels for the pollutants in GREET
-            items.Add("CO2", true);
-            items.Add("NOx", true);
-            items.Add("SO2", true);
-            items.Add("VOC", true);
+
+            foreach (IGas gas in SplitContributions.Controler.CurrentProject.Data.Gases.AllValues)
+                items.Add(gas, true);
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
+            //Crawls the selected item to extract it's graph structure
+            Graph g = CrawlSelected();
+
+            if (g == null)
+            {
+                MessageBox.Show("Not a viable pathway/mix selected or crawling error");
+                return;
+            }
+
             SaveFileDialog filedata = new SaveFileDialog();
             filedata.FileName = "greet_process.csv";
             filedata.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
@@ -167,6 +147,7 @@ namespace Greet.Plugins.SplitContributions.UI
                 outputVars[i] = itemChecked.ToString();
                 i++;
             }
+
             Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g);
         }
     }

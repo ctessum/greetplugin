@@ -90,6 +90,14 @@ namespace Greet.Plugins.SplitContributions.Buisness
             return new KeyValuePair<Guid,Guid>(fakeProcess.VertexID, fakeOutput.Id);
         }
 
+        /// <summary>
+        /// This method takes as an input a reference to a pathway and the GUID of an output in that pathway in order to recursively 
+        /// crawl the processes that are upstream of the selected output
+        /// </summary>
+        /// <param name="path">Reference to the pathway to be crawled</param>
+        /// <param name="output">Desired output to be crawled</param>
+        /// <param name="g">Graph object to which processes and flows will be added</param>
+        /// <returns>Vertex ID and outptut ID of the clostest process to the selected output</returns>
         private static KeyValuePair<Guid, Guid> TracePathway(IPathway path, Guid output, Graph g)
         {
             IIO pathOutput = path.Outputs.Single(item => item.Id == output);
@@ -101,6 +109,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
             return new KeyValuePair<Guid, Guid>(fakeProcess.Key, fakeProcess.Value);
         }
 
+        /// <summary>
+        /// This method uses a reference to an input and a pathway in order to determine which process/pathway/mix 
+        /// is connected upstream of the input, then adds recursively processes and flows to the graph object
+        /// </summary>
+        /// <param name="path">The pathway containing the input we're trying to crawl upsteam</param>
+        /// <param name="vertexId">The vertexID containing the process model for which we're trying to crawl an input</param>
+        /// <param name="input">The input reference we're trying to crawl</param>
+        /// <param name="g">The graph object beeing completed with processes and flows</param>
+        /// <returns>Vertex ID and output ID of the closes process to the selected input</returns>
         private static KeyValuePair<Guid, Guid> TraceInput(IPathway path, Guid vertexId, Input input, Graph g)
         {
             if (input.Source == Enumerators.SourceType.Mix)
@@ -140,6 +157,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
             throw new Exception("Input source must be Mix, Pathway or Previous");
         }
 
+        /// <summary>
+        /// Creates a new process object in the graph and crawl it's inputs from "previous"
+        /// This will be extended later on to crawl on all inputs
+        /// </summary>
+        /// <param name="path">The pathw containing the vertex/process</param>
+        /// <param name="vertexID">The vertex ID containing the process model</param>
+        /// <param name="outputId">Outptut ID used to connected to the vertex ID</param>
+        /// <param name="g">Graph object beeing completed with the process and flow</param>
+        /// <returns>VertexID and OutputID of the process inserted in the graph, a flow is also inserted and connected to that OutputID</returns>
         private static KeyValuePair<Guid, Guid> TraceProcess(IPathway path, Guid vertexID, Guid outputId, Graph g)
         {
             IVertex previousVertex = path.Vertices.Single(item => item.ID == vertexID);

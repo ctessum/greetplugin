@@ -30,8 +30,8 @@
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.treeView1 = new System.Windows.Forms.TreeView();
-            this.buttonSave = new System.Windows.Forms.Button();
             this.outputSelector = new System.Windows.Forms.CheckedListBox();
+            this.buttonSave = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,18 +62,6 @@
             this.treeView1.Size = new System.Drawing.Size(238, 445);
             this.treeView1.TabIndex = 0;
             // 
-            // buttonSave
-            // 
-            this.buttonSave.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.buttonSave.Location = new System.Drawing.Point(441, 404);
-            this.buttonSave.Name = "buttonSave";
-            this.buttonSave.Size = new System.Drawing.Size(75, 23);
-            this.buttonSave.TabIndex = 1;
-            this.buttonSave.Text = "Save results";
-            this.buttonSave.UseVisualStyleBackColor = true;
-            this.buttonSave.Visible = false;
-            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-            // 
             // outputSelector
             // 
             this.outputSelector.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -84,6 +72,17 @@
             this.outputSelector.Name = "outputSelector";
             this.outputSelector.Size = new System.Drawing.Size(463, 364);
             this.outputSelector.TabIndex = 2;
+            // 
+            // buttonSave
+            // 
+            this.buttonSave.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.buttonSave.Location = new System.Drawing.Point(441, 404);
+            this.buttonSave.Name = "buttonSave";
+            this.buttonSave.Size = new System.Drawing.Size(75, 23);
+            this.buttonSave.TabIndex = 1;
+            this.buttonSave.Text = "Save results";
+            this.buttonSave.UseVisualStyleBackColor = true;
+            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
             // ProductSelectionForm
             // 
