@@ -20,6 +20,11 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             _unit = unit;
         }
 
+        public Value Copy()
+        {
+            return new Value(Val,Unit);
+        }
+
         public int SpecieID
         {
             get { throw new NotImplementedException(); }
@@ -54,21 +59,28 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
 
         public static Value operator +(Value a, Value b)
         {
-            if (a.Unit == b.Unit)
+            //if (a.Unit == b.Unit)
                 return new Value(a.Val + b.Val, a.Unit);
-            else
-                throw new Exception("Inconsistent units !!!");
+           // else
+           //     throw new Exception("Inconsistent units !!!");
         }
 
         // overload operator * 
         public static Value operator *(Value a, Value b)
         {
-            if (a.Unit == b.Unit)
+            //if (a.Unit == b.Unit)
                 return new Value(a.Val * b.Val, a.Unit);
-            else
-                throw new Exception("Inconsistent units !!!");
+            //else
+            //    throw new Exception("Inconsistent units !!!");
         }
-
+        // overload operator / 
+        public static Value operator /(Value a, Value b)
+        {
+            //if (a.Unit == b.Unit)
+                return new Value(a.Val / b.Val, a.Unit);
+            //else
+            //    throw new Exception("Inconsistent units !!!");
+        }
 
     }
 }

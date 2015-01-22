@@ -20,7 +20,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="type"></param>
         /// <param name="gasOrResourceID"></param>
         /// <returns></returns>
-        public static Dictionary<string, float[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
+        public static Dictionary<string, double[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
         {           
             //int resourceId = -1;
             //IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(resourceId);
@@ -34,15 +34,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
             {
                 foreach(Process p in g.Processes) // Prepare for this iteration
                 {
-                    p.PreviousQuantity = p.Quantity; // Does this copy the value or is it a pointer?
-                    if (p.VertexID==startingProcess.VertexID) // Does this work?
+                    p.PreviousQuantity = p.Quantity.Copy(); 
+                    if (p.VertexID==startingProcess.VertexID)
                     {
                          POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
                          p.Quantity = startingOutput.Quantity;
                     }
                     else
                     {
-                        p.Quantity.Val = 0.; // Amount for this iteration will be calculated based on previous amount.
+                        p.Quantity = new Value(0,p.Quantity.Unit); // Amount for this iteration will be calculated based on previous amount.
                     }
                 }
                 foreach(Process p in g.Processes) 
@@ -50,18 +50,23 @@ namespace Greet.Plugins.SplitContributions.Buisness
                     foreach(PInput input in p.Inputs)
                     {
                         // The flow describes the link between and process requiring an input (p)
-                        // and the process providing the output (op).
+                        // and the process providing the output (previousProcess).
+                        if(!g.Flows.Any(item => item.EndVertex == p.VertexID && item.EndInput == input.Id))
+                            continue; // Change to exception later.
+
                         Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
                         
-                        // op is the process providing the output. It is at the start vertex of the flow.
+                        // previousProcess is the process providing the output. It is at the start vertex of the flow.
                         Process previousProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
-                        //POutput output = g.Outputs.Single(item => flow.StartOutput == item.Id);
+                      
+                        // PreviousProcessOutput is the output of the previous process.
+                        POutput previousProcessOutput = previousProcess.Outputs.Single(item => item.Id == flow.StartOutput);
+                        // PreviousProcessQuantity is the quantity that is output by default.
+                        Value previousProcessQuantity = previousProcessOutput.Quantity; 
                         
                         // The new quantity of the process providing the output (op) is the amount of the current
-                        // process (p) times the amount required by the input (input).
-                       
-                        POutput previousProcessOutput = previousProcess.Outputs.Single(item => item.Id == flow.StartOutput);
-                        Value previousProcessQuantity = previousProcessOutput.Quantity;
+                        // process (p) times the amount required by the input (input), divided by the amount that is
+                        // output by default. This new quantity is added to whatever quantity was previously calculated.
                         previousProcess.Quantity += input.Quantity * p.Quantity / previousProcessQuantity;
                     }
                     //foreach(POutput output in p.Outputs)
@@ -91,18 +96,18 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 }
             }
 
-            Dictionary<string, float[]> data = new Dictionary<string, float[]>(); 
+            Dictionary<string, double[]> data = new Dictionary<string, double[]>(); 
             Random random = new Random(); 
             int i = 0; 
             foreach (Process p in g.Processes)
             { 
                 int numVars = gasOrResourceIDs.Length+1;
-                float[] vals = new float[numVars];
-                vals[j] = p.Quantity.Value;
+                double[] vals = new double[numVars];
+                vals[0] = p.Quantity.Val;
                 for (int j = 1; j<numVars; j++) 
                 { 
                     double v = random.NextDouble(); 
-                    vals[j] = (float)v; 
+                    vals[j] = v; 
                 } 
                 data.Add(i.ToString() + " " + p.Name + "," + p.ProcessModelId, vals); 
                 i++; 
@@ -143,7 +148,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             fid.WriteLine(varline.ToString());
 
             // Write data to file.
-            Dictionary<string, float[]> data = ExtractContributions(graph, startingOutputId, 0, gasOrResourceIDs, functionalUnit);
+            Dictionary<string, double[]> data = ExtractContributions(graph, startingOutputId, 0, gasOrResourceIDs, functionalUnit);
             foreach (var pair in data)
             {
                 StringBuilder line = new StringBuilder();

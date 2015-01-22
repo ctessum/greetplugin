@@ -69,8 +69,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
         public bool CheckConverged()
         {
             const double tolerance = 1e-9;
-            double a = _quantity.Value;
-            double b = _previousQuantity.Value;
+            double a = _quantity.Val;
+            double b = _previousQuantity.Val;
             if (a == b || Math.Abs(a-b)/(a+b) < tolerance) {
                 return true;
 	        }
