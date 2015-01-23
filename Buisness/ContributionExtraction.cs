@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Greet.DataStructureV3.Entities;
 
 namespace Greet.Plugins.SplitContributions.Buisness
 {
@@ -109,6 +110,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 int numVars = gasOrResourceIDs.Length+1;
                 double[] vals = new double[numVars];
                 vals[0] = p.Quantity.Val;
+
                 for (int j = 1; j<numVars; j++) 
                 { 
                     double v = random.NextDouble(); 
@@ -160,11 +162,63 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 line.Append(pair.Key);
                 foreach (float val in pair.Value)
                 {
-                    line.Append(","+val.ToString());
+                    line.Append("," + val.ToString());
                 }
                 fid.WriteLine(line.ToString());
             }
             fid.Close();
+        }
+
+
+
+
+        /// <summary>
+        /// Normalize IOs as well as results objects stored within that process
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="unit"></param>
+        /// <returns></returns>
+        private static Process NormalizeProcess(Process p, string unit)
+        {
+            Process pcopy = new Process();
+            pcopy.Name = p.Name;
+            pcopy.ProcessModelId = p.ProcessModelId;
+            pcopy.VertexID = p.VertexID;
+            pcopy.PreviousQuantity = Value.Clone(p.PreviousQuantity);
+            pcopy.Quantity = Value.Clone(p.Quantity);
+
+            //Normalizes inputs and outputs
+            foreach (PInput input in p.Inputs)
+            {
+                PInput copy = new PInput();
+                copy.Id = input.Id;
+                copy.MixOrPathwayID = input.MixOrPathwayID;
+                copy.ResourceID = input.ResourceID;
+                copy.Source = input.Source;
+
+                IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(input.ResourceID);
+                IValue val = resource.ConvertTo(unit, input.Quantity);
+
+                pcopy.Inputs.Add(copy);
+            }
+
+            //Normalize results
+            foreach (POutput output in p.Outputs)
+            {
+                POutput copy = new POutput();
+                copy.Id = output.Id;
+                copy.ResourceID = output.ResourceID;
+                copy.Quantity = Value.Clone(output.Quantity);
+
+                IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(output.ResourceID);
+                ResourceData r = resource as ResourceData;
+
+
+                pcopy.Outputs.Add(copy);
+            }
+
+            return pcopy;
+
         }
 
     }
