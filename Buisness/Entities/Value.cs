@@ -65,6 +65,13 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             else
                 throw new Exception("Inconsistent units !!!");
         }
+        public static Value operator -(Value a, Value b)
+        {
+            if (a.Unit == b.Unit)
+                return new Value(a.Val - b.Val, a.Unit);
+            else
+                throw new Exception("Inconsistent units !!!");
+        }
 
         // overload operator * 
         public static Value operator *(Value a, Value b)
