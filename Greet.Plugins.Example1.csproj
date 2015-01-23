@@ -75,7 +75,7 @@
       <HintPath>"%25userprofile%25\Documents\Greet\Plugins\API\2014\Greet.Model.dll</HintPath>
     </Reference>
     <Reference Include="Greet.UnitLib">
-      <HintPath>..\..\..\..\AppData\Local\Apps\2.0\YCYK9M0O.CNB\4L8YQP4B.VPZ\gree..tion_225603010e0cee19_0001.0002_c5feebbe32fc4291\Greet.UnitLib.dll</HintPath>
+      <HintPath>..\..\Greet\Plugins\API\2014\Greet.UnitLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

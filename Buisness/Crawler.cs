@@ -141,20 +141,19 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
                 if (previousVertex.Type == 0)
                 { //a process
-                    TraceProcess(path, previousVertex.ID, edge.OutputID, g);
+                    return TraceProcess(path, previousVertex.ID, edge.OutputID, g);
                 }
                 if (previousVertex.Type == 1)
                 { //a pathway
                     IPathway prevPath = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(previousVertex.ModelID);
-                    TracePathway(prevPath, prevPath.MainOutput, g);
+                    return TracePathway(prevPath, prevPath.MainOutput, g);
                 }
                 if (previousVertex.Type == 2)
                 { //a mix
                     IMix prevMix = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(previousVertex.ModelID);
-                    TraceMix(prevMix, g);
+                    return TraceMix(prevMix, g);
                 }
-
-                return new KeyValuePair<Guid, Guid>(edge.OutputVertexID, edge.OutputID);
+                throw new Exception("Previous vertex must be a process reference, or feed reference (to another mix or pathway)");
             }
             throw new Exception("Input source must be Mix, Pathway or Previous");
         }
@@ -172,48 +171,74 @@ namespace Greet.Plugins.SplitContributions.Buisness
         {
             IVertex previousVertex = path.Vertices.Single(item => item.ID == vertexID);
             IProcess processModel = SplitContributions.Controler.CurrentProject.Data.Processes.ValueForKey(previousVertex.ModelID);
+            AProcess ap = processModel as AProcess;
             CanonicalProcess cp = (path as Pathway).CanonicalProcesses[vertexID];
 
-            Process fakeProcess = new Process();
-            fakeProcess.Name = processModel.Name;
-            fakeProcess.ProcessResults = cp;
-            fakeProcess.ProcessModelId = processModel.Id;
-            fakeProcess.VertexID = vertexID;
-            bool added = g.AddProcess(fakeProcess);
-            if (added)
-            {//this is to prevent crawling double connections -< between two processes in the same pathway
+            Process fakeProcess;
+            bool newProcess = false;
+            if (g.Processes.Any(item => item.VertexID == vertexID))
+                fakeProcess = g.Processes.Single(item => item.VertexID == vertexID);
+            else
+            {
+                fakeProcess = new Process();
+                fakeProcess.Name = processModel.Name;
+                fakeProcess.ProcessModelId = processModel.Id;
+                fakeProcess.VertexID = vertexID;
+                newProcess = g.AddProcess(fakeProcess);
+            }
+            
+            
+            if(!fakeProcess.Outputs.Any(item => item.Id == outputId))
+            {//adding the output beeing crawled
                 POutput fakeOutput = new POutput();
                 fakeOutput.Id = outputId;
+                fakeOutput.Results = cp.OutputsResults[outputId].Results;
+                AOutput output = ap.FlattenAllocatedOutputList.Single(item => item.Id == outputId) as AOutput;
+                fakeOutput.Quantity = new Value(output.AmountAfterLossesBufffer.ValueInDefaultUnit, output.AmountAfterLossesBufffer.QuantityName);
+                fakeOutput.ResourceID = output.ResourceId;
                 fakeProcess.Outputs.Add(fakeOutput);
-
-                if (processModel is AProcess)
+            }
+            
+            //adding the displaced outptus
+            foreach (IIO outp in ap.FlattenAllocatedOutputList)
+            {
+                if (outp is CoProduct && (outp as CoProduct).method == CoProductsElements.TreatmentMethod.displacement)
                 {
-                    AProcess ap = processModel as AProcess;
-                    AOutput output = ap.FlattenAllocatedOutputList.Single(item => item.Id == outputId) as AOutput;
-                    fakeOutput.Quantity = new Value(output.AmountAfterLossesBufffer.ValueInDefaultUnit, output.AmountAfterLossesBufffer.QuantityName);
-                    fakeOutput.ResourceID = output.ResourceId;
-
-                    foreach (Input inp in ap.FlattenInputList)
-                    {
-
-                        PInput fakeInput = new PInput();
-                        fakeInput.Id = inp.Id;
-                        fakeProcess.Inputs.Add(fakeInput);
-                        fakeInput.Quantity = new Value(inp.AmountForCalculations.ValueInDefaultUnit, inp.AmountForCalculations.QuantityName);
-                        fakeInput.ResourceID = inp.ResourceId;
-
-                        if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
-                        {
-                            KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);
-                            Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
-                            g.AddFlow(f);
-                        }
+                    if(!fakeProcess.Outputs.Any(item => item.Id == outp.Id))
+                    {//adding the output beeing crawled
+                        POutput fakeCoProduct = new POutput();
+                        fakeCoProduct.Id = outp.Id;
+                        fakeCoProduct.Results = null;
+                        fakeCoProduct.Quantity = new Value((outp as CoProduct).AmountAfterLossesBufffer.ValueInDefaultUnit, (outp as CoProduct).AmountAfterLossesBufffer.QuantityName);
+                        fakeCoProduct.ResourceID = outp.ResourceId;
+                        fakeCoProduct.IsDisplaced = true;
+                        fakeCoProduct.Id = outputId;
+                        fakeProcess.Outputs.Add(fakeCoProduct);
                     }
                 }
-                return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, fakeOutput.Id);
             }
-            else
-                return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, outputId);
+           
+            if (newProcess)
+            {//if new we crawl all inputs, otherwise we do not need to as it was already performed before
+                foreach (Input inp in ap.FlattenInputList)
+                {
+
+                    PInput fakeInput = new PInput();
+                    fakeInput.Id = inp.Id;
+                    fakeProcess.Inputs.Add(fakeInput);
+                    fakeInput.Quantity = new Value(inp.AmountForCalculations.ValueInDefaultUnit, inp.AmountForCalculations.QuantityName);
+                    fakeInput.ResourceID = inp.ResourceId;
+
+                    if (!inp.InternalProduct && inp.Source != Enumerators.SourceType.Well && inp.Source == Enumerators.SourceType.Previous)
+                    {
+                        KeyValuePair<Guid, Guid> link = TraceInput(path, previousVertex.ID, inp, g);
+                        Flow f = new Flow(link.Key, link.Value, fakeProcess.VertexID, fakeInput.Id);
+                        g.AddFlow(f);
+                    }
+                }
+            }
+            
+            return new KeyValuePair<Guid, Guid>(fakeProcess.VertexID, outputId);
         }
     }
 }

@@ -130,6 +130,8 @@ namespace Greet.Plugins.SplitContributions.UI
             Graph g = new Graph();
             KeyValuePair<Guid, Guid> link = CrawlSelected(out g);
 
+            //string str = ToJavaScript(g);
+
             if (g == null
                 || !g.Processes.Any(item => item.VertexID == link.Key)
                 || link.Value == Guid.Empty)
@@ -157,5 +159,19 @@ namespace Greet.Plugins.SplitContributions.UI
 
             Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g, link.Value, functionalUnit);
         }
+
+
+        //private string ToJavaScript(Graph g)
+        //{
+        //    string js = "";
+        //    foreach (Flow f in g.Flows)
+        //    {
+        //        Process start = g.Processes.Single(item => item.VertexID == f.StartVertex);
+        //        Process end = g.Processes.Single(item => item.VertexID == f.EndVertex);
+
+        //        js += "g.addEdge(\"" + start.Name + "-" + start.VertexID + "\",\"" + end.Name + "-" + end.VertexID + "\");" + Environment.NewLine; 
+        //    }
+        //    return js;
+        //}
     }
 }
