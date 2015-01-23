@@ -68,6 +68,9 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Greet.ConvenienceLib">
+      <HintPath>..\..\Greet\Plugins\API\2014\Greet.ConvenienceLib.dll</HintPath>
+    </Reference>
     <Reference Include="Greet.DataStructureV3">
       <HintPath>"%25userprofile%25\Documents\Greet\Plugins\API\2014\Greet.DataStructureV3.dll</HintPath>
     </Reference>
