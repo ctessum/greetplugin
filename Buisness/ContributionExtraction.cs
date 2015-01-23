@@ -22,7 +22,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <param name="type"></param>
         /// <param name="gasOrResourceID"></param>
         /// <returns></returns>
-        public static Dictionary<string, double[]> ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
+        public static void ExtractContributions(Graph g, Guid startingPoint, int type, int[] gasOrResourceIDs, Value functionalUnit)
         {           
             //int resourceId = -1;
             //IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(resourceId);
@@ -31,6 +31,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             NormalizeGraph(g, functionalUnit.Unit);
             
             Process startingProcess = g.Processes.Single(item => item.Outputs.Any(oo => oo.Id == startingPoint));
+            startingProcess.IsStartingProcess = true;
 
             // Find the amount of each process that is required to create the output process.
             bool firstIteration = true;
@@ -40,7 +41,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 foreach(Process p in g.Processes) // Prepare for this iteration
                 {
                     p.PreviousQuantity = p.Quantity.Copy();
-                    if (p.VertexID==startingProcess.VertexID) // Does this work?
+                    if (p.IsStartingProcess) // Does this work?
                     {
                          POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
                          p.Quantity = startingOutput.Quantity;
@@ -103,48 +104,75 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 }
             }
 
-            Dictionary<string, double[]> data = new Dictionary<string, double[]>(); 
-            Random random = new Random(); 
-            int i = 0; 
-            foreach (Process p in g.Processes)
-            { 
-                int numVars = gasOrResourceIDs.Length+1;
-                double[] vals = new double[numVars];
-                vals[0] = p.Quantity.Val;
-
-                for (int j = 1; j<numVars; j++) 
-                { 
-                    double v = random.NextDouble(); 
-                    vals[j] = v; 
+            // After we know the amount of each process that's required, we can multiply that
+            // amount by the onsite emissions intensity to get the emissions contribution of 
+            // that process.
+            foreach(Process p in g.Processes)
+            {
+                p.EmissionsContribution = new double[gasOrResourceIDs.Length];
+                for (int j = 1; j < gasOrResourceIDs.Length; j++)
+                {
+                    double emissions = 0;
+                    // The onsite emissions are allocated among the outputs. Since we're interested in
+                    // the ...........problem here.
+                    foreach (POutput o in p.Outputs)
+                    {
+                        if (o.Results!=null && o.Results.onsiteEmissions.ContainsKey(gasOrResourceIDs[j]))
+                            emissions += o.Results.onsiteEmissions[gasOrResourceIDs[j]];
+                    }
+                    p.EmissionsContribution[j] = emissions;
                 } 
-                data.Add(i.ToString() + " " + p.Name + "," + p.ProcessModelId, vals); 
-                i++; 
-            } 
-
-            return data;
+            }
+            return;
         }
 
         /// <summary>
         /// Saves the extracted values to a file
         /// </summary>
         /// <param name="dictionary"></param>
-        public static void SaveToFile(System.IO.StreamWriter fid, string[] outputVars, Graph graph, Guid startingOutputId, Value functionalUnit)
+        public static void SaveToFile(System.IO.StreamWriter fid, string[] outputVars, Graph g, Guid startingOutputId, Value functionalUnit)
         {
-            int[] gasOrResourceIDs = new int[outputVars.Length];
 
-            // This should be replaced with code that gets the actual IDs of the variable names.
+            // Get the IDs associated with the variable names.
+            int[] gasOrResourceIDs = new int[outputVars.Length];
             int i = 0;
             foreach (string var in outputVars)
             {
-                gasOrResourceIDs[i] = i;
+                bool found = false;
+                foreach (IGas item in SplitContributions.Controler.CurrentProject.Data.Gases.AllValues)
+                {
+                    if (item.Name==var)
+                    {
+                        gasOrResourceIDs[i] = item.Id;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    throw new Exception("Can't match output variable.");
                 i++;
             }
 
+            // Calculate the emissions contributions
+            ExtractContributions(g, startingOutputId, 0, gasOrResourceIDs, functionalUnit);
+
+            // Find the starting process
+            Process startingProcess = null;
+            foreach (Process p in g.Processes)
+            {
+                if (p.IsStartingProcess)
+                {
+                    startingProcess = p;
+                    break;
+                }
+            }
+
             // Write header to file.
-            fid.WriteLine("# Output process: xxxxxxxxxxxxxxx");
-            fid.WriteLine("# Functional unit: xxxxxxxxxxxxxxx");
-            fid.WriteLine("# GREET version: xxxxxxxxxxxxxxxxxx");
-            fid.WriteLine("# Database version: xxxxxxxxxxxxxxxx");
+            fid.WriteLine("# Output process name:, " + startingProcess.Name);
+            fid.WriteLine("# Output process model ID:, " + startingProcess.ProcessModelId.ToString());
+            fid.WriteLine("# Functional unit:, xxxxxxxxxxxxxxx");
+            fid.WriteLine("# GREET version:, xxxxxxxxxxxxxxxxxx");
+            fid.WriteLine("# Database version:, xxxxxxxxxxxxxxxx");
 
             // Write variable names to file.
             StringBuilder varline = new StringBuilder();
@@ -156,12 +184,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
             fid.WriteLine(varline.ToString());
 
             // Write data to file.
-            Dictionary<string, double[]> data = ExtractContributions(graph, startingOutputId, 0, gasOrResourceIDs, functionalUnit);
-            foreach (var pair in data)
+            foreach (Process p in g.Processes)
             {
                 StringBuilder line = new StringBuilder();
-                line.Append(pair.Key);
-                foreach (float val in pair.Value)
+                line.Append(p.Name + "," + p.ProcessModelId.ToString() + "," + p.Quantity.Val.ToString());
+                foreach (float val in p.EmissionsContribution)
                 {
                     line.Append("," + val.ToString());
                 }

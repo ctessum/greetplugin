@@ -18,10 +18,13 @@ namespace Greet.Plugins.SplitContributions.Buisness
         List<POutput> _outputs = new List<POutput>();
         int _processModelId;
         Guid _vertexID;
+        bool _isStartingProcess;
+
     
         String _name;
         Value _quantity;
         Value _previousQuantity;
+        double[] _emissionsContribution;
         #endregion
 
         #region public accessors
@@ -70,6 +73,12 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 return true;
 	        }
             return false;
+        }
+        public double[] EmissionsContribution { get; set; }
+        public bool IsStartingProcess
+        {
+            get { return _isStartingProcess; }
+            set { _isStartingProcess = value; }
         }
         #endregion
     }

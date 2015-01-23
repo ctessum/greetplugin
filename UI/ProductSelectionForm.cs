@@ -118,15 +118,15 @@ namespace Greet.Plugins.SplitContributions.UI
         private void addOutputs()
         {
             var items = outputSelector.Items;
-            // The will be the actual text labels for the pollutants in GREET
 
+            // Output all of the gases by default.
             foreach (IGas gas in SplitContributions.Controler.CurrentProject.Data.Gases.AllValues)
                 items.Add(gas, true);
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
-            //Crawls the selected item to extract it's graph structure
+            //Crawls the selected item to extract its graph structure
             Graph g = new Graph();
             KeyValuePair<Guid, Guid> link = CrawlSelected(out g);
 
