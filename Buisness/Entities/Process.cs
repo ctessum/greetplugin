@@ -42,6 +42,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         Value _quantity;
         Value _previousQuantity;
         double[] _emissionsContribution;
+        double[] _previousEmissionsContribution;
         #endregion
 
         #region public accessors
@@ -106,6 +107,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             return false;
         }
         public double[] EmissionsContribution { get; set; }
+        public double[] PreviousEmissionsContribution { get; set; }
         public bool IsStartingProcess
         {
             get { return _isStartingProcess; }

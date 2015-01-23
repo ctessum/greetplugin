@@ -107,8 +107,23 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             else
                 throw new Exception("Inconsistent units !!!");
         }
+
         /// <summary>
-        /// overload operator * 
+        /// overload operator -
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Value operator -(Value a, Value b)
+        {
+            if (a.Unit == b.Unit)
+                return new Value(a.Val - b.Val, a.Unit);
+            else
+                throw new Exception("Inconsistent units !!!");
+        }
+
+        /// <summary>
+        /// overload operator *
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -117,6 +132,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         {
             return new Value(a.Val * b.Val, a.Unit);
         }
+        
         /// <summary>
         /// overload operator / 
         /// </summary>
@@ -127,6 +143,6 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         {
             return new Value(a.Val / b.Val, a.Unit);
         }
-      
+        #endregion opertators
     }
 }

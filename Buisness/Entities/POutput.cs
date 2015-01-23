@@ -20,6 +20,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         /// Quantity for that output, this information is extracted from the process model
         /// </summary>
         Value _quantity;
+        Value _quantityRequired; // How much of the output is needed by the input it's associated with
         /// <summary>
         /// The resource ID for that output, defines which resource and which phisical properties to assume for that output
         /// </summary>
@@ -99,6 +100,12 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         {
             get { return _quantity; }
             set { _quantity = value; }
+        }
+
+        public Value QuantityRequired
+        {
+            get { return _quantityRequired; }
+            set { _quantityRequired = value; }
         }
 
         /// <summary>
