@@ -50,7 +50,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         private static KeyValuePair<Guid, Guid> TraceMix(IMix mix, Graph g)
         {
             Process fakeProcess = new Process();
-            fakeProcess.Name = "Mix?";
+            fakeProcess.Name = mix.Name;
             fakeProcess.VertexID = Guid.NewGuid();
             g.AddProcess(fakeProcess);
 

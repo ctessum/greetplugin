@@ -130,7 +130,7 @@ namespace Greet.Plugins.SplitContributions.UI
             Graph g = new Graph();
             KeyValuePair<Guid, Guid> link = CrawlSelected(out g);
 
-            //string str = ToJavaScript(g);
+            string str = ToJavaScript(g);
 
             if (g == null
                 || !g.Processes.Any(item => item.VertexID == link.Key)
@@ -161,17 +161,20 @@ namespace Greet.Plugins.SplitContributions.UI
         }
 
 
-        //private string ToJavaScript(Graph g)
-        //{
-        //    string js = "";
-        //    foreach (Flow f in g.Flows)
-        //    {
-        //        Process start = g.Processes.Single(item => item.VertexID == f.StartVertex);
-        //        Process end = g.Processes.Single(item => item.VertexID == f.EndVertex);
+        private string ToJavaScript(Graph g)
+        {
+            string js = "source,target,value" + Environment.NewLine;
+            foreach (Flow f in g.Flows)
+            {
+                Process start = g.Processes.Single(item => item.VertexID == f.StartVertex);
+                Process end = g.Processes.Single(item => item.VertexID == f.EndVertex);
 
-        //        js += "g.addEdge(\"" + start.Name + "-" + start.VertexID + "\",\"" + end.Name + "-" + end.VertexID + "\");" + Environment.NewLine; 
-        //    }
-        //    return js;
-        //}
+                bool startMultiple = g.Processes.Any(item => item.Name == start.Name && item.VertexID != start.VertexID);
+                bool endMultiple = g.Processes.Any(item => item.Name == end.Name && item.VertexID != end.VertexID);
+
+                js += (startMultiple ? start.Name + "-" + start.VertexID : start.Name) + "," + (endMultiple ? end.Name + "-" + end.VertexID : end.Name) + ",1" + Environment.NewLine;
+            }
+            return js;
+        }
     }
 }
