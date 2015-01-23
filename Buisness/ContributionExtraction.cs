@@ -40,15 +40,16 @@ namespace Greet.Plugins.SplitContributions.Buisness
             {
                 foreach(Process p in g.Processes) // Prepare for this iteration
                 {
-                    p.PreviousQuantity = p.Quantity.Copy();
-                    if (p.IsStartingProcess) // Does this work?
+                    if (p.Quantity != null)
+                        p.PreviousQuantity = p.Quantity.Copy();
+                    if (p.IsStartingProcess)
                     {
                          POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
                          p.Quantity = startingOutput.Quantity;
                     }
                     else
                     {
-                        p.Quantity  = new Value(0,p.Quantity.Unit); // Amount for this iteration will be calculated based on previous amount.
+                        p.Quantity = new Value(0, Unit2PluralUnit(functionalUnit.Unit)); // Amount for this iteration will be calculated based on previous amount.
                     }
                 }
                 foreach(Process p in g.Processes) 
@@ -239,22 +240,23 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 output.Quantity.Val = converted.Value;
                 output.Quantity.Unit = converted.Unit;
 
-                output.Results = r.ConvertTo(SplitContributions.Controler.CurrentProject.Data as GData
-                    , Unit2PluralUnit(unit)
-                    , output.Results);
+                if (output.Results != null)
+                    output.Results = r.ConvertTo(SplitContributions.Controler.CurrentProject.Data as GData
+                        , Unit2PluralUnit(unit)
+                        , output.Results);
             }
         }
 
         private static string Unit2Group(string unit)
         {
-            if (unit == "joule")
+            if (unit == "joule" || unit == "joules" || unit == "energy")
                 return "energy";
-            else if (unit == "cubic_meter")
+            else if (unit == "cubic_meter" || unit == "cubic_meters" || unit == "volume")
                 return "volume";
-            else if (unit == "kilogram")
+            else if (unit == "kilogram" || unit == "kilograms" || unit == "mass")
                 return "mass";
             else
-                throw new Exception("Unknow given unit");
+                throw new Exception("Unknown given unit");
         }
 
         private static string Group2Unit(string unit)
@@ -266,7 +268,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             else if (unit == "mass")
                 return "kilogram";
             else
-                throw new Exception("Unknow given unit");
+                throw new Exception("Unknown given unit");
         }
 
         private static string Unit2PluralUnit(string unit)
@@ -278,7 +280,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             else if (unit == "kilogram")
                 return "kilograms";
             else
-                throw new Exception("Unknow given unit");
+                throw new Exception("Unknown given unit");
         }
     }
 }
