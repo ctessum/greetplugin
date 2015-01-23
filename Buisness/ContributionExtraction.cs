@@ -31,7 +31,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
             // Find the amount of each process that is required to create the output process.
             bool firstIteration = true;
-            while(true) 
+            bool keepGoing = true;
+            while(keepGoing) 
             {
                 foreach(Process p in g.Processes) // Prepare for this iteration
                 {
@@ -73,7 +74,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                         // The new quantity of the process providing the output (op) is the amount of the current
                         // process (p) times the amount required by the input (input), divided by the amount that is
                         // output by default. This new quantity is added to whatever quantity was previously calculated.
-                        previousProcess.Quantity += input.Quantity * p.Quantity / previousProcessQuantity;
+                        previousProcess.Quantity += input.Quantity * p.Quantity / previousProcessQuantity; // Does this include loss factors?
                     }
                     //foreach(POutput output in p.Outputs)
                     //{
@@ -83,17 +84,14 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 }
                 if (!firstIteration) // Check for convergence
                 {
-                    bool converged = true;
+                    keepGoing = false;
                     foreach (Process p in g.Processes)
                     {
                         if (!p.CheckConverged()) 
                         {
-                            converged = false;
+                            keepGoing = true;
+                            break;
                         }
-                    }
-                    if (converged) 
-                    {
-                        break;
                     }
                 }
                 else 
