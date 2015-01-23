@@ -204,7 +204,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             // Write header to file.
             fid.WriteLine("# Output process name:, " + startingProcess.Name);
             fid.WriteLine("# Output process model ID:, " + startingProcess.ProcessModelId.ToString());
-            fid.WriteLine("# Functional unit:, xxxxxxxxxxxxxxx");
+            fid.WriteLine("# Functional unit:, kg emissions / J product");
             fid.WriteLine("# GREET version:, xxxxxxxxxxxxxxxxxx");
             fid.WriteLine("# Database version:, xxxxxxxxxxxxxxxx");
 

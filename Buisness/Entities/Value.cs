@@ -144,5 +144,10 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             return new Value(a.Val / b.Val, a.Unit);
         }
         #endregion opertators
+
+        public override string ToString()
+        {
+            return _value + " " + _unit;
+        }
     }
 }
