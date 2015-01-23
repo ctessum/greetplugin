@@ -34,15 +34,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
             {
                 foreach(Process p in g.Processes) // Prepare for this iteration
                 {
-                    p.PreviousQuantity = p.Quantity.Copy(); 
-                    if (p.VertexID==startingProcess.VertexID)
+                    p.PreviousQuantity = p.Quantity.Copy();
+                    if (p.VertexID==startingProcess.VertexID) // Does this work?
                     {
                          POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
                          p.Quantity = startingOutput.Quantity;
                     }
                     else
                     {
-                        p.Quantity = new Value(0,p.Quantity.Unit); // Amount for this iteration will be calculated based on previous amount.
+                        p.Quantity  = new Value(0,p.Quantity.Unit); // Amount for this iteration will be calculated based on previous amount.
                     }
                 }
                 foreach(Process p in g.Processes) 

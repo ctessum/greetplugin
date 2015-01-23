@@ -22,7 +22,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
 
         public Value Copy()
         {
-            return new Value(Val,Unit);
+            return new Value(Val, Unit);
         }
 
         public int SpecieID
@@ -61,8 +61,8 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         {
             //if (a.Unit == b.Unit)
                 return new Value(a.Val + b.Val, a.Unit);
-           // else
-           //     throw new Exception("Inconsistent units !!!");
+            //else
+            //    throw new Exception("Inconsistent units !!!");
         }
 
         // overload operator * 
@@ -81,6 +81,5 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             //else
             //    throw new Exception("Inconsistent units !!!");
         }
-
     }
 }
