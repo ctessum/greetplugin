@@ -50,7 +50,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         private static KeyValuePair<Guid, Guid> TraceMix(IMix mix, Graph g)
         {
             Process fakeProcess = new Process();
-            fakeProcess.Name = "Mix?";
+            fakeProcess.Name = mix.Name;
             fakeProcess.VertexID = Guid.NewGuid();
             g.AddProcess(fakeProcess);
 
@@ -60,6 +60,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
             fakeOutput.ResourceID = mix.MainOutputResourceID;
             Mix m = mix as Mix;
             fakeOutput.Quantity = new Value(1, m.mixOutputResults.Results.FunctionalUnit);
+            fakeOutput.Results = m.MixBalance;
 
             foreach (IProductionItem item in mix.FuelProductionEntities)
             {
@@ -214,6 +215,25 @@ namespace Greet.Plugins.SplitContributions.Buisness
                         fakeCoProduct.IsDisplaced = true;
                         fakeCoProduct.Id = outputId;
                         fakeProcess.Outputs.Add(fakeCoProduct);
+
+                        foreach (ConventionalProducts displaced in (outp as CoProduct).ConventionalDisplacedResourcesList)
+                        {
+                            fakeCoProduct.DisplacementRatios.Add(displaced.DispRatio.ValueInDefaultUnit);
+                            if (displaced.MaterialKey.Source == Enumerators.SourceType.Mix)
+                            { 
+                                IMix mixDisplaced = SplitContributions.Controler.CurrentProject.Data.Mixes.ValueForKey(displaced.MaterialKey.SourceMixOrPathwayID);
+                                KeyValuePair<Guid, Guid> source = TraceMix(mixDisplaced, g);
+                                fakeCoProduct.DisplacedVertices.Add(source.Key);
+                                fakeCoProduct.DisplacedOutputs.Add(source.Value);
+                            }
+                            else if (displaced.MaterialKey.Source == Enumerators.SourceType.Pathway)
+                            {
+                                IPathway pathDisplaced = SplitContributions.Controler.CurrentProject.Data.Pathways.ValueForKey(displaced.MaterialKey.SourceMixOrPathwayID);
+                                KeyValuePair<Guid, Guid> source = TracePathway(pathDisplaced, pathDisplaced.MainOutput, g);
+                                fakeCoProduct.DisplacedVertices.Add(source.Key);
+                                fakeCoProduct.DisplacedOutputs.Add(source.Value);
+                            }
+                        }
                     }
                 }
             }
