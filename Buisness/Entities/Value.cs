@@ -9,7 +9,7 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
     /// <summary>
     /// A value and it's unit
     /// </summary>
-    public struct Value : IValue
+    public class Value : IValue
     {
         double _value;
         string _unit;
@@ -27,12 +27,13 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
 
         public int SpecieID
         {
-            get { throw new NotImplementedException(); }
+            get { return -1; }
         }
 
         public string Unit
         {
             get { return _unit; }
+            set { _unit = value; }
         }
 
         public double Val
@@ -48,38 +49,32 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
 
         public Enumerators.ResultType ValueSpecie
         {
-            get { throw new NotImplementedException(); }
+            get { return Enumerators.ResultType.resource; }
         }
 
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
 
         public static Value operator +(Value a, Value b)
         {
-            //if (a.Unit == b.Unit)
+            if (a.Unit == b.Unit)
                 return new Value(a.Val + b.Val, a.Unit);
-            //else
-            //    throw new Exception("Inconsistent units !!!");
+            else
+                throw new Exception("Inconsistent units !!!");
         }
 
         // overload operator * 
         public static Value operator *(Value a, Value b)
         {
-            //if (a.Unit == b.Unit)
-                return new Value(a.Val * b.Val, a.Unit);
-            //else
-            //    throw new Exception("Inconsistent units !!!");
+            return new Value(a.Val * b.Val, a.Unit);
         }
         // overload operator / 
         public static Value operator /(Value a, Value b)
         {
-            //if (a.Unit == b.Unit)
-                return new Value(a.Val / b.Val, a.Unit);
-            //else
-            //    throw new Exception("Inconsistent units !!!");
+            return new Value(a.Val / b.Val, a.Unit);
         }
         internal static Value Clone(Value value)
         {

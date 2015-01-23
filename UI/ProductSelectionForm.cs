@@ -155,7 +155,7 @@ namespace Greet.Plugins.SplitContributions.UI
                 i++;
             }
 
-            Greet.Plugins.SplitContributions.Buisness.Entities.Value functionalUnit = new Greet.Plugins.SplitContributions.Buisness.Entities.Value();
+            Greet.Plugins.SplitContributions.Buisness.Entities.Value functionalUnit = new Greet.Plugins.SplitContributions.Buisness.Entities.Value(1, "joule");
 
             Greet.Plugins.SplitContributions.Buisness.ContributionExtraction.SaveToFile(fid, outputVars, g, link.Value, functionalUnit);
         }

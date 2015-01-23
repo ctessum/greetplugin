@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Greet.DataStructureV3.Entities;
+using Greet.DataStructureV3;
 
 namespace Greet.Plugins.SplitContributions.Buisness
 {
@@ -27,6 +28,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
             //IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(resourceId);
             //IValue value = resource.ConvertTo("kilograms", new Value(1, "energy"));
 
+            NormalizeGraph(g, functionalUnit.Unit);
+            
             Process startingProcess = g.Processes.Single(item => item.Outputs.Any(oo => oo.Id == startingPoint));
 
             // Find the amount of each process that is required to create the output process.
@@ -168,56 +171,87 @@ namespace Greet.Plugins.SplitContributions.Buisness
         }
 
 
+        /// <summary>
+        /// Normalizes a graph and convert all the quantities and results to the same unit or functional unit
+        /// </summary>
+        /// <param name="g">The graph to be normalized</param>
+        /// <param name="unit">The desired unit "joule", "kilogram" or "cubic_meter"</param>
+        /// <returns>Modified graph</returns>
+        private static void NormalizeGraph(Graph g, string unit)
+        {
+            foreach (Process p in g.Processes)
+                NormalizeProcess(p, unit);
+        }
 
 
         /// <summary>
         /// Normalize IOs as well as results objects stored within that process
         /// </summary>
-        /// <param name="p"></param>
-        /// <param name="unit"></param>
-        /// <returns></returns>
-        private static Process NormalizeProcess(Process p, string unit)
+        /// <param name="p">The process to be normalized</param>
+        /// <param name="unit">The desired unit "joule", "kilogram" or "cubic_meter"</param>
+        private static void NormalizeProcess(Process p, string unit)
         {
-            Process pcopy = new Process();
-            pcopy.Name = p.Name;
-            pcopy.ProcessModelId = p.ProcessModelId;
-            pcopy.VertexID = p.VertexID;
-            pcopy.PreviousQuantity = Value.Clone(p.PreviousQuantity);
-            pcopy.Quantity = Value.Clone(p.Quantity);
-
             //Normalizes inputs and outputs
             foreach (PInput input in p.Inputs)
             {
-                PInput copy = new PInput();
-                copy.Id = input.Id;
-                copy.MixOrPathwayID = input.MixOrPathwayID;
-                copy.ResourceID = input.ResourceID;
-                copy.Source = input.Source;
-
                 IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(input.ResourceID);
-                IValue val = resource.ConvertTo(unit, input.Quantity);
-
-                pcopy.Inputs.Add(copy);
+                ResourceData r = resource as ResourceData;
+                input.Quantity.Unit = Unit2Group(input.Quantity.Unit);
+                IValue converted = resource.ConvertTo(Unit2PluralUnit(unit), input.Quantity);
+                input.Quantity.Val = converted.Value;
+                input.Quantity.Unit = converted.Unit;       
             }
 
             //Normalize results
             foreach (POutput output in p.Outputs)
             {
-                POutput copy = new POutput();
-                copy.Id = output.Id;
-                copy.ResourceID = output.ResourceID;
-                copy.Quantity = Value.Clone(output.Quantity);
-
                 IResource resource = SplitContributions.Controler.CurrentProject.Data.Resources.ValueForKey(output.ResourceID);
                 ResourceData r = resource as ResourceData;
+                output.Quantity.Unit = Unit2Group(output.Quantity.Unit);
+                IValue converted = resource.ConvertTo(Unit2PluralUnit(unit), output.Quantity);
+                output.Quantity.Val = converted.Value;
+                output.Quantity.Unit = converted.Unit;
 
-
-                pcopy.Outputs.Add(copy);
+                output.Results = r.ConvertTo(SplitContributions.Controler.CurrentProject.Data as GData
+                    , Unit2PluralUnit(unit)
+                    , output.Results);
             }
-
-            return pcopy;
-
         }
 
+        private static string Unit2Group(string unit)
+        {
+            if (unit == "joule")
+                return "energy";
+            else if (unit == "cubic_meter")
+                return "volume";
+            else if (unit == "kilogram")
+                return "mass";
+            else
+                throw new Exception("Unknow given unit");
+        }
+
+        private static string Group2Unit(string unit)
+        {
+            if (unit == "energy")
+                return "joule";
+            else if (unit == "volume")
+                return "cubic_meter";
+            else if (unit == "mass")
+                return "kilogram";
+            else
+                throw new Exception("Unknow given unit");
+        }
+
+        private static string Unit2PluralUnit(string unit)
+        {
+             if (unit == "joule")
+                return "joules";
+            else if (unit == "cubic_meter")
+                return "cubic_meters";
+            else if (unit == "kilogram")
+                return "kilograms";
+            else
+                throw new Exception("Unknow given unit");
+        }
     }
 }
