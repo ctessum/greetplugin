@@ -42,6 +42,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 {
                     if (p.Quantity != null)
                         p.PreviousQuantity = p.Quantity.Copy();
+                    else
+                        p.PreviousQuantity = new Value(0, Unit2PluralUnit(functionalUnit.Unit));
                     if (p.IsStartingProcess)
                     {
                          POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
@@ -69,42 +71,38 @@ namespace Greet.Plugins.SplitContributions.Buisness
                             continue; // Change to exception later.
 
                         // previousProcess is the process providing the output. It is at the start vertex of the flow.
-                        Process previousProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
+                        Process upstreamProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
                       
                         // PreviousProcessOutput is the output of the previous process.
-                        POutput previousProcessOutput = previousProcess.Outputs.Single(item => item.Id == flow.StartOutput);
+                        POutput upstreamProcessOutput = upstreamProcess.Outputs.Single(item => item.Id == flow.StartOutput);
                         // PreviousProcessQuantity is the quantity that is output by default.
-                        Value previousProcessQuantity = previousProcessOutput.Quantity; 
+                        Value upstreamProcessQuantity = upstreamProcessOutput.Quantity; 
                         
                         // The new quantity of the process providing the output (op) is the amount of the current
                         // process (p) times the amount required by the input (input), divided by the amount that is
                         // output by default. This new quantity is added to whatever quantity was previously calculated.
-                        Value requirement = input.Quantity * p.Quantity / previousProcessQuantity;
-                        previousProcess.Quantity += requirement;
+                        Value requirement = input.Quantity * p.PreviousQuantity / upstreamProcessQuantity;
+                        upstreamProcess.Quantity += requirement;
                         // We also calculate the quantity required of the current output, so that we can multiply the emissions
                         // by it later.
-                        previousProcessOutput.QuantityRequired = requirement; 
+                        upstreamProcessOutput.QuantityRequired = requirement; 
                     }
                     foreach(POutput output in p.Outputs)
                     {
                         if (output.IsDisplaced)
                         {
-                            // Some flows are not currently tracked. If the flow is not tracked, continue on.
-                            if (!g.Flows.Any(item => item.StartVertex == p.VertexID && item.StartOutput == output.Id))
-                                continue; // Change to exception later.
+                            for (int i = 0; i < output.DisplacedVertices.Count; i++)
+                            {                         
+                                // displacedProcess is the process providing that is being displaced.
+                                Process displacedProcess = g.Processes.Single(item => item.VertexID == output.DisplacedVertices[i]);
+                                // displayedOutput is the specific output that is being replaced on the displaced process.
+                                POutput displacedOutput = displacedProcess.Outputs.Single(oo => oo.Id == output.DisplacedOutputs[i]);
 
-                            // The flow describes the link between and process requiring displaced input (displacedProcess)
-                            // and the process providing the output (p).
-                            Flow flow = g.Flows.Single(item => item.StartVertex == p.VertexID && item.StartOutput == output.Id);
-
-                            // Some processes are not currently tracked. If this process is not tracked, continue on.
-                            if (!g.Processes.Any(item => item.VertexID == flow.EndVertex))
-                                continue; // Change to exception later.
-
-                            // displacedProcess is the process providing that is being displaced. It is at the end vertex of the flow.
-                            Process displacedProcess = g.Processes.Single(item => item.VertexID == flow.EndVertex);
-                            Value displacementRatio = new Value(1, Unit2PluralUnit(functionalUnit.Unit)); //////////////////////// Replace with the actual ratio later.
-                            displacedProcess.Quantity -= p.Quantity / output.Quantity * displacementRatio;
+                                Value dr = new Value(output.DisplacementRatios[i], Unit2PluralUnit(functionalUnit.Unit));
+                                Value displacedQuantity = p.PreviousQuantity * output.Quantity * dr / displacedOutput.Quantity;
+                                displacedProcess.Quantity -= displacedQuantity;
+                                displacedOutput.QuantityRequired = displacedQuantity.Copy();
+                            }
                         }      
                     }
                 }
@@ -146,6 +144,18 @@ namespace Greet.Plugins.SplitContributions.Buisness
                     }
                     p.EmissionsContribution[j] = emissions;
                 } 
+            }
+
+            // Finally, we adjust everything so that the final output amount matches the requested amount.
+            // For now, this amount is 1.
+            double outputTotal = startingProcess.Quantity.Val;
+            foreach (Process p in g.Processes)
+            {
+                p.Quantity.Val /= outputTotal;
+                for (int j = 0; j < gasOrResourceIDs.Length; j++)
+                {
+                    p.EmissionsContribution[j] /= outputTotal;
+                }
             }
             return;
         }
