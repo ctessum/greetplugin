@@ -81,15 +81,9 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             //else
             //    throw new Exception("Inconsistent units !!!");
         }
-<<<<<<< HEAD
-=======
-
-
-
         internal static Value Clone(Value value)
         {
             return new Value(value.Val, value.Unit);
         }
->>>>>>> 6360056f8ca9eff3697ff2b6f32d9da17a7f4661
     }
 }
