@@ -200,11 +200,11 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
 
         /// <summary>
-        /// Normalizes a graph and convert all the quantities and results to the same unit or functional unit
+        /// <para>Normalizes a graph and convert all the quantities and results to the same unit or functional unit</para>
+        /// <para>WARNING: This method modifies the content of the instance of the Graph</para>
         /// </summary>
         /// <param name="g">The graph to be normalized</param>
         /// <param name="unit">The desired unit "joule", "kilogram" or "cubic_meter"</param>
-        /// <returns>Modified graph</returns>
         private static void NormalizeGraph(Graph g, string unit)
         {
             foreach (Process p in g.Processes)
@@ -213,7 +213,8 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
 
         /// <summary>
-        /// Normalize IOs as well as results objects stored within that process
+        /// <para>Normalize IOs as well as results objects stored within that process</para>
+        /// <para>WARNING: This method modifies the content of the instance of the Process</para>
         /// </summary>
         /// <param name="p">The process to be normalized</param>
         /// <param name="unit">The desired unit "joule", "kilogram" or "cubic_meter"</param>
@@ -247,6 +248,13 @@ namespace Greet.Plugins.SplitContributions.Buisness
             }
         }
 
+
+        /// <summary>
+        /// Method to help with inconsistencies with unit names
+        /// Converts units or groups to "energy", "volume" or "mass"
+        /// </summary>
+        /// <param name="unit">Unit name or group name</param>
+        /// <returns>"energy", "volume" or "mass"</returns>
         private static string Unit2Group(string unit)
         {
             if (unit == "joule" || unit == "joules" || unit == "energy")
@@ -259,25 +267,37 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 throw new Exception("Unknown given unit");
         }
 
-        private static string Group2Unit(string unit)
+        /// <summary>
+        /// Method to help with inconsistencies with unit names
+        /// Converts units or groups to "joule", "cubic_meter" or "kilogram"
+        /// </summary>
+        /// <param name="unit">Unit name or group name</param>
+        /// <returns>"joule", "cubic_meter" or "kilogram"</returns>
+        private static string Group2UnitSingular(string unit)
         {
-            if (unit == "energy")
+            if (unit == "energy" || unit == "joule" || unit == "joules")
                 return "joule";
-            else if (unit == "volume")
+            else if (unit == "volume" || unit == "cubic_meter" || unit == "cubic_meters")
                 return "cubic_meter";
-            else if (unit == "mass")
+            else if (unit == "mass" || unit == "kilogram" || unit == "kilograms")
                 return "kilogram";
             else
                 throw new Exception("Unknown given unit");
         }
 
+        /// <summary>
+        /// Method to help with inconsistencies with unit names
+        /// Converts units or groups to "joules", "cubic_meters" or "kilograms"
+        /// </summary>
+        /// <param name="unit">Unit name or group name</param>
+        /// <returns>"joules", "cubic_meters" or "kilograms"</returns>
         private static string Unit2PluralUnit(string unit)
         {
-             if (unit == "joule")
+             if (unit == "joule" || unit == "joules" || unit == "energy")
                 return "joules";
-            else if (unit == "cubic_meter")
+            else if (unit == "cubic_meter" || unit == "cubic_meters" || unit == "volume")
                 return "cubic_meters";
-            else if (unit == "kilogram")
+            else if (unit == "kilogram" || unit == "kilograms" || unit == "mass")
                 return "kilograms";
             else
                 throw new Exception("Unknown given unit");
