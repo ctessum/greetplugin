@@ -93,6 +93,7 @@
   <ItemGroup>
     <Compile Include="Buisness\ContributionExtraction.cs" />
     <Compile Include="Buisness\Crawler.cs" />
+    <Compile Include="Buisness\Entities\Amounts.cs" />
     <Compile Include="Buisness\Entities\Flow.cs" />
     <Compile Include="Buisness\Entities\Graph.cs" />
     <Compile Include="Buisness\Entities\PInput.cs" />

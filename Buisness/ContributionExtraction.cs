@@ -31,105 +31,95 @@ namespace Greet.Plugins.SplitContributions.Buisness
             NormalizeGraph(g, functionalUnit.Unit);
             
             Process startingProcess = g.Processes.Single(item => item.Outputs.Any(oo => oo.Id == startingPoint));
+            POutput startingOutput = startingProcess.Outputs.Single(item => item.Id == startingPoint);
             startingProcess.IsStartingProcess = true;
+
+            // Calculate total inputs and outputs for each process.
+            foreach (Process p in g.Processes)
+            {
+                foreach (PInput i in p.Inputs)
+                    p.TotalInputs += i.Quantity.Val;
+                foreach (POutput o in p.Outputs)
+                    p.TotalOutputs += o.Quantity.Val;
+            }
 
             // Find the amount of each process that is required to create the output process.
             bool firstIteration = true;
             bool keepGoing = true;
             while(keepGoing) 
             {
-                foreach(Process p in g.Processes) // Prepare for this iteration
-                {
-                    if (p.Quantity != null)
-                        p.PreviousQuantity = p.Quantity.Copy();
-                    else
-                        p.PreviousQuantity = new Value(0, Unit2PluralUnit(functionalUnit.Unit));
-                    if (p.IsStartingProcess)
-                    {
-                         POutput startingOutput = p.Outputs.Single(oo => oo.Id == startingPoint);
-                         p.Quantity = startingOutput.Quantity;
-                    }
-                    else
-                    {
-                        p.Quantity = new Value(0, Unit2PluralUnit(functionalUnit.Unit)); // Amount for this iteration will be calculated based on previous amount.
-                    }
-                }
+                keepGoing = false;
                 foreach(Process p in g.Processes) 
                 {
-                    foreach(PInput input in p.Inputs)
+                    foreach (POutput output in p.Outputs)
                     {
-                        // Some flows and processes are not currently tracked. If the flow is not tracked, continue on.
-                        if(!g.Flows.Any(item => item.EndVertex == p.VertexID && item.EndInput == input.Id))
-                            continue; // Change to exception later.
-
-                        // The flow describes the link between and process requiring an input (p)
-                        // and the process providing the output (previousProcess).
-                        Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
-
-                        // Some flows and processes are not currently tracked. If this process is not tracked, continue on.
-                        if (!g.Processes.Any(item => item.VertexID == flow.StartVertex))
-                            continue; // Change to exception later.
-
-                        // previousProcess is the process providing the output. It is at the start vertex of the flow.
-                        Process upstreamProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
-                      
-                        // PreviousProcessOutput is the output of the previous process.
-                        POutput upstreamProcessOutput = upstreamProcess.Outputs.Single(item => item.Id == flow.StartOutput);
-                        // PreviousProcessQuantity is the quantity that is output by default.
-                        Value upstreamProcessQuantity = upstreamProcessOutput.Quantity; 
-                        
-                        // The new quantity of the process providing the output (op) is the amount of the current
-                        // process (p) times the amount required by the input (input), divided by the amount that is
-                        // output by default. This new quantity is added to whatever quantity was previously calculated.
-                        Value requirement = input.Quantity * p.PreviousQuantity / upstreamProcessQuantity;
-                        upstreamProcess.Quantity += requirement;
-                        // We also calculate the quantity required of the current output, so that we can multiply the emissions
-                        // by it later.
-                        upstreamProcessOutput.QuantityRequired = requirement; 
-                    }
-                    foreach(POutput output in p.Outputs)
-                    {
-                        if (output.IsDisplaced)
+                        Amounts oldAmounts = output.Amounts.Copy(); // Copy the amounts so we can check for convergance.
+                        output.Amounts.Reset(output.Id); // We recaculate the amounts each iteration
+                        foreach (PInput input in p.Inputs)
                         {
-                            for (int i = 0; i < output.DisplacedVertices.Count; i++)
-                            {                         
-                                // displacedProcess is the process providing that is being displaced.
-                                Process displacedProcess = g.Processes.Single(item => item.VertexID == output.DisplacedVertices[i]);
-                                // displayedOutput is the specific output that is being replaced on the displaced process.
-                                POutput displacedOutput = displacedProcess.Outputs.Single(oo => oo.Id == output.DisplacedOutputs[i]);
+                            // Some flows and processes are not currently tracked. If the flow is not tracked, continue on.
+                            if (!g.Flows.Any(item => item.EndVertex == p.VertexID && item.EndInput == input.Id))
+                                continue; // Change to exception later.
 
-                                Value dr = new Value(output.DisplacementRatios[i], Unit2PluralUnit(functionalUnit.Unit));
-                                Value displacedQuantity = p.PreviousQuantity * output.Quantity * dr / displacedOutput.Quantity;
-                                displacedProcess.Quantity -= displacedQuantity;
-                                displacedOutput.QuantityRequired = displacedQuantity.Copy();
+                            // The flow describes the link between and process requiring an input (p)
+                            // and the process providing the output (previousProcess).
+                            Flow flow = g.Flows.Single(item => item.EndVertex == p.VertexID && item.EndInput == input.Id);
+
+                            // Some flows and processes are not currently tracked. If this process is not tracked, continue on.
+                            if (!g.Processes.Any(item => item.VertexID == flow.StartVertex))
+                                continue; // Change to exception later.
+
+                            // previousProcess is the process providing the output. It is at the start vertex of the flow.
+                            Process upstreamProcess = g.Processes.Single(item => item.VertexID == flow.StartVertex);
+
+                            // PreviousProcessOutput is the output of the previous process.
+                            POutput upstreamProcessOutput = upstreamProcess.Outputs.Single(item => item.Id == flow.StartOutput);
+
+                            // Scale the amounts required by the upstream process and add them to the requirements for
+                            // this process.
+                            output.Amounts.AddScaled(upstreamProcessOutput.Amounts, input.Quantity.Val /
+                                upstreamProcessOutput.Quantity.Val * output.Quantity.Val / p.TotalOutputs);
+
+                            foreach (POutput displacingOutput in p.Outputs)
+                            {
+                                if (displacingOutput.IsDisplaced)
+                                {
+                                    for (int i = 0; i < displacingOutput.DisplacedVertices.Count; i++)
+                                    {
+                                        // displacedProcess is the process providing that is being displaced.
+                                        Process displacedProcess = g.Processes.Single(item =>
+                                            item.VertexID == displacingOutput.DisplacedVertices[i]);
+                                        // displayedOutput is the specific output that is being replaced on the displaced process.
+                                        POutput displacedOutput = displacedProcess.Outputs.Single(
+                                            oo => oo.Id == displacingOutput.DisplacedOutputs[i]);
+
+                                        output.Amounts.AddScaled(displacedOutput.Amounts, output.Quantity.Val *
+                                               displacingOutput.DisplacementRatios[i] / displacedOutput.Quantity.Val *
+                                               output.Quantity.Val / p.TotalOutputs);
+                                    }
+                                }
                             }
-                        }      
-                    }
-                }
-                if (!firstIteration) // Check for convergence
-                {
-                    keepGoing = false;
-                    foreach (Process p in g.Processes)
-                    {
-                        if (!p.CheckConverged()) 
+                        }
+                        if (firstIteration || !oldAmounts.CheckConverged(output.Amounts))
                         {
                             keepGoing = true;
-                            break;
+                            firstIteration = false;
                         }
                     }
                 }
-                else 
-                {
-                    firstIteration = false;
-                }
             }
 
+
             // After we know the amount of each process that's required, we can multiply that
-            // amount by the onsite emissions intensity to get the emissions contribution of 
-            // that process.
-            foreach(Process p in g.Processes)
+            // amount by the onsite energy and emissions intensities to get the 
+            // energy and emissions contributions of that process.
+            // There might be a problem here if the starting process has more than one output.
+            foreach(KeyValuePair<Guid,double> oVal in startingOutput.Amounts)
             {
-                p.EmissionsContribution = new double[gasOrResourceIDs.Length];
+                Process p = g.Processes.Find(item => item.Outputs.Any(oo => oo.Id == oVal.Key));
+                POutput o = p.Outputs.Single(item => item.Id == oVal.Key);
+
+                o.EmissionsContribution = new double[gasOrResourceIDs.Length];
                 for (int j = 0; j < gasOrResourceIDs.Length; j++)
                 {
                     double emissions = 0;
@@ -137,25 +127,10 @@ namespace Greet.Plugins.SplitContributions.Buisness
                     // the quantity required of each output by its corresponding emissions and
                     // add them all together.
                     // This apparently won't work for displaced emissions.
-                    foreach (POutput o in p.Outputs)
-                    {
-                        if (o.Results!=null && o.QuantityRequired!=null && o.Results.onsiteEmissions.ContainsKey(gasOrResourceIDs[j]))
-                            emissions += o.Results.onsiteEmissions[gasOrResourceIDs[j]] * o.QuantityRequired.Val;
-                    }
-                    p.EmissionsContribution[j] = emissions;
-                } 
-            }
-
-            // Finally, we adjust everything so that the final output amount matches the requested amount.
-            // For now, this amount is 1.
-            double outputTotal = startingProcess.Quantity.Val;
-            foreach (Process p in g.Processes)
-            {
-                p.Quantity.Val /= outputTotal;
-                for (int j = 0; j < gasOrResourceIDs.Length; j++)
-                {
-                    p.EmissionsContribution[j] /= outputTotal;
-                }
+                    if (o.Results != null  && 
+                        o.Results.onsiteEmissions.ContainsKey(gasOrResourceIDs[j]))
+                        o.EmissionsContribution[j] = o.Results.onsiteEmissions[gasOrResourceIDs[j]] * oVal.Value;
+                }  
             }
             return;
         }
@@ -210,7 +185,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
 
             // Write variable names to file.
             StringBuilder varline = new StringBuilder();
-            varline.Append("Process name, Process Model ID, amount");
+            varline.Append("Process name, Process Model ID");
             foreach (string var in outputVars)
             {
                 varline.Append("," + var);
@@ -220,13 +195,18 @@ namespace Greet.Plugins.SplitContributions.Buisness
             // Write data to file.
             foreach (Process p in g.Processes)
             {
-                StringBuilder line = new StringBuilder();
-                line.Append(p.Name + "," + p.ProcessModelId.ToString() + "," + p.Quantity.Val.ToString());
-                foreach (float val in p.EmissionsContribution)
+                foreach (POutput o in p.Outputs)
                 {
-                    line.Append("," + val.ToString());
+                    if (o.EmissionsContribution == null)
+                        continue;
+                    StringBuilder line = new StringBuilder();
+                    line.Append(p.Name + "," + p.ProcessModelId.ToString());
+                    foreach (double val in o.EmissionsContribution)
+                    {
+                        line.Append("," + val.ToString());
+                    }
+                    fid.WriteLine(line.ToString());
                 }
-                fid.WriteLine(line.ToString());
             }
             fid.Close();
         }

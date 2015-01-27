@@ -49,13 +49,10 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// <returns>Couple of the <ExitVertex, ExitOutput></returns>
         private static KeyValuePair<Guid, Guid> TraceMix(IMix mix, Graph g)
         {
-            Process fakeProcess = new Process();
-            fakeProcess.Name = mix.Name;
-            fakeProcess.VertexID = Guid.NewGuid();
+            Process fakeProcess = new Process(mix.Name, Guid.NewGuid());
             g.AddProcess(fakeProcess);
 
-            POutput fakeOutput = new POutput();
-            fakeOutput.Id = Guid.NewGuid();
+            POutput fakeOutput = new POutput(new Guid());
             fakeProcess.Outputs.Add(fakeOutput);
             fakeOutput.ResourceID = mix.MainOutputResourceID;
             Mix m = mix as Mix;
@@ -160,7 +157,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
         }
 
         /// <summary>
-        /// Creates a new process object in the graph and crawl it's inputs from "previous"
+        /// Creates a new process object in the graph and crawl its inputs from "previous"
         /// This will be extended later on to crawl on all inputs
         /// </summary>
         /// <param name="path">The pathw containing the vertex/process</param>
@@ -181,18 +178,15 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 fakeProcess = g.Processes.Single(item => item.VertexID == vertexID);
             else
             {
-                fakeProcess = new Process();
-                fakeProcess.Name = processModel.Name;
+                fakeProcess = new Process(processModel.Name, vertexID);
                 fakeProcess.ProcessModelId = processModel.Id;
-                fakeProcess.VertexID = vertexID;
                 newProcess = g.AddProcess(fakeProcess);
             }
             
             
             if(!fakeProcess.Outputs.Any(item => item.Id == outputId))
             {//adding the output beeing crawled
-                POutput fakeOutput = new POutput();
-                fakeOutput.Id = outputId;
+                POutput fakeOutput = new POutput(outputId);
                 fakeOutput.Results = cp.OutputsResults[outputId].Results;
                 AOutput output = ap.FlattenAllocatedOutputList.Single(item => item.Id == outputId) as AOutput;
                 fakeOutput.Quantity = new Value(output.AmountAfterLossesBufffer.ValueInDefaultUnit, output.AmountAfterLossesBufffer.QuantityName);
@@ -207,7 +201,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                 {
                     if(!fakeProcess.Outputs.Any(item => item.Id == outp.Id))
                     {//adding the output beeing crawled
-                        POutput fakeCoProduct = new POutput();
+                        POutput fakeCoProduct = new POutput(new Guid());
                         fakeCoProduct.Id = outp.Id;
                         fakeCoProduct.Results = null;
                         fakeCoProduct.Quantity = new Value((outp as CoProduct).AmountAfterLossesBufffer.ValueInDefaultUnit, (outp as CoProduct).AmountAfterLossesBufffer.QuantityName);

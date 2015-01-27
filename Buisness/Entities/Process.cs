@@ -39,13 +39,22 @@ namespace Greet.Plugins.SplitContributions.Buisness
         /// Name of the process model used for that vertex
         /// </summary>
         String _name;
-        Value _quantity;
-        Value _previousQuantity;
-        double[] _emissionsContribution;
-        double[] _previousEmissionsContribution;
+        /// <summary>
+        /// The amounts of all processes that this process requires well to product
+        /// </summary>
+        double _energyUse;
+        double _totalInputs;
+        double _totalOutputs;
+
+
         #endregion
 
         #region public accessors
+        public Process(string name, Guid vertexID)
+        {
+            _name = name;
+            _vertexID = vertexID;
+        }
         /// <summary>
         /// Unique ID for that vertex in the GREET database
         /// </summary>
@@ -86,32 +95,25 @@ namespace Greet.Plugins.SplitContributions.Buisness
             get { return _processModelId; }
             set { _processModelId = value; }
         }
-        public Value Quantity
-        {
-            get { return _quantity; }
-            set { _quantity = value; }
-        }
-        public Value PreviousQuantity
-        {
-            get { return _previousQuantity; }
-            set { _previousQuantity = value; }
-        }
-        public bool CheckConverged()
-        {
-            const double tolerance = 1e-9;
-            double a = _quantity.Val;
-            double b = _previousQuantity.Val;
-            if (a == b || Math.Abs(a-b)/(a+b) < tolerance) {
-                return true;
-	        }
-            return false;
-        }
-        public double[] EmissionsContribution { get; set; }
-        public double[] PreviousEmissionsContribution { get; set; }
         public bool IsStartingProcess
         {
             get { return _isStartingProcess; }
             set { _isStartingProcess = value; }
+        }
+        public double EnergyUse
+        {
+            get { return _energyUse; }
+            set { _energyUse = value; }
+        }
+        public double TotalOutputs
+        {
+            get { return _totalOutputs; }
+            set { _totalOutputs = value; }
+        }
+        public double TotalInputs
+        {
+            get { return _totalInputs; }
+            set { _totalInputs = value; }
         }
         #endregion
     }

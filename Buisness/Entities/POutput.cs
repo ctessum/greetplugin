@@ -20,7 +20,6 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         /// Quantity for that output, this information is extracted from the process model
         /// </summary>
         Value _quantity;
-        Value _quantityRequired; // How much of the output is needed by the input it's associated with
         /// <summary>
         /// The resource ID for that output, defines which resource and which phisical properties to assume for that output
         /// </summary>
@@ -51,9 +50,16 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
         /// DisplacementRatios, DisplacedVertices and DisplacedOutputs are ordered and should be used together
         /// </summary>
         List<Guid> _displacedOutputs;
+        Amounts _amounts;
+        double[] _emissionsContribution;
         #endregion
 
         #region public accessors
+        public POutput(Guid id) 
+        {
+            _id = id;
+            _amounts = new Amounts(_id);
+        }
         /// <summary>
         /// <para>If true the output is a displaced output, therefore it cannot be used downstream as a feed for another process.</para>
         /// <para>If true no Flow will be created for that output in the Graph.</para>
@@ -101,13 +107,6 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             get { return _quantity; }
             set { _quantity = value; }
         }
-
-        public Value QuantityRequired
-        {
-            get { return _quantityRequired; }
-            set { _quantityRequired = value; }
-        }
-
         /// <summary>
         /// Displacement ratios for all the products displaced by that output. Only contains somethging if IsDisplaced is true.
         /// DisplacementRatios, DisplacedVertices and DisplacedOutputs are ordered and should be used together
@@ -137,6 +136,17 @@ namespace Greet.Plugins.SplitContributions.Buisness.Entities
             get { return _displacedOutputs; }
             set { _displacedOutputs = value; }
         }
+        public Amounts Amounts
+        {
+            get { return _amounts; }
+            set { _amounts = value; }
+        }
+        public double[] EmissionsContribution
+        {
+            get { return _emissionsContribution; }
+            set { _emissionsContribution = value; }
+        }
+
         #endregion
     }
 }

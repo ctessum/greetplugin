@@ -13,8 +13,6 @@ namespace Greet.Plugins.SplitContributions.Buisness
         List<Process> _processes = new List<Process>();
         List<Flow> _flows = new List<Flow>();
 
-    
-
         /// <summary>
         /// Tests if a process with the same ID is already inserted in the graph
         /// and if not, inserts the given process to the graph
