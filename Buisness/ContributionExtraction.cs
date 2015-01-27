@@ -93,7 +93,7 @@ namespace Greet.Plugins.SplitContributions.Buisness
                                         POutput displacedOutput = displacedProcess.Outputs.Single(
                                             oo => oo.Id == displacingOutput.DisplacedOutputs[i]);
 
-                                        output.Amounts.AddScaled(displacedOutput.Amounts, output.Quantity.Val *
+                                        output.Amounts.AddScaled(displacedOutput.Amounts, -output.Quantity.Val *
                                                displacingOutput.DisplacementRatios[i] / displacedOutput.Quantity.Val *
                                                output.Quantity.Val / p.TotalOutputs);
                                     }
